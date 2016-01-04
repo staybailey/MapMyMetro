@@ -13,6 +13,13 @@ CREATE TABLE stops (
   stop_id INT(11), stop_code INT(11), stop_name VARCHAR(255), stop_desc VARCHAR(255), stop_lat VARCHAR(255), stop_lon VARCHAR(255), zone_id INT(11), stop_url VARCHAR(255), location_type INT(11), parent_station VARCHAR(255), stop_timezone VARCHAR(255)
 );
 
+/* route_id,agency_id,route_short_name,route_long_name,route_desc,
+route_type,route_url,route_color,route_text_color */
 CREATE TABLE routes (
+  route_id INT(11), agency_id VARCHAR(11), route_short_name VARCHAR(255), route_long_name VARCHAR(255), route_desc VARCHAR(255), route_type INT(11), route_url VARCHAR(255), route_color VARCHAR(255), route_text_color VARCHAR(255), PRIMARY KEY (route_id), FOREIGN KEY (agency_id)
+);
 
+/* route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id */
+CREATE TABLE trips (
+  route_id INT(11), service_id INT(11), trip_id INT(11), trip_headsign VARCHAR(255), trip_short_name VARCHAR(255), direction_id INT(11), block_id INT(11), shape_id INT(11), PRIMARY KEY (trip_id), FOREIGN KEY (route_id), /* FOREIGN KEY (service_id), FOREIGN KEY (block_id), FOREIGN KEY (shape_id) */
 );
