@@ -29,7 +29,7 @@ angular.module('cransit', [
   });
 })
 // Add run stuff
-.run(function () { 
+.run(function ($scope) { 
 
 });
 
