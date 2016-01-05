@@ -1,0 +1,11 @@
+<div id='container'>
+  <div>
+    <input type='text' placeholder="search" ng-model="searchTerm"></input>
+  </div>
+  <div ng-repeat="route in data.routes | filter:searchTerm | orderBy:'-route_short_name'">
+    <div class="routeName">{{ route.route_short_name }}</div>
+    <div class="dayFrequency">{{ route.daytime_frequency }}</div>
+    <div class="serviceStart">{{ route.service_start }}</div>
+    <div class="serviceEnd">{{ route.service_end }}</div>
+  </div>
+</div>

@@ -14,7 +14,7 @@ angular.module('cransit', [
   })
   .state('list.routes', {
     url: '/routes',
-    templateUrl: 'app/ui-routes/routes.html',
+    templateUrl: 'app/ui-routes/list.routes.html',
     controller: 'Routes',
     resolve: {
       routes: function (Routes) {
@@ -24,7 +24,7 @@ angular.module('cransit', [
   })
   .state('list.addRoute', {
     url: '/addroute',
-    templateUrl: 'app/ui-routes/addRoute.html',
+    templateUrl: 'app/ui-routes/list.addRoute.html',
     controller: 'AddRoute'
   });
 })

@@ -1,9 +1,9 @@
-angular.module('cransit.routes', [])
+angular.module('cransit.addroute', [])
 .controller('AddRoute', function ($scope, Routes) {
   $scope.route = {};
   $scope.count = 700
   $scope.data.addRoute = function () {
-    $scope.route['route_id'] = 'dummy' // FIX LATER
+    $scope.route['route_id'] = 1; // FIX LATER
     $scope.route['route_short_name'] = $scope.name || $scope.count++;
     $scope.route['trip_headsign'] = $scope.description || '';
     $scope.route['peak_frequency'] = $scope.peak_frequency || $scope.daytime_frequency;

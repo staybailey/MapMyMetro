@@ -35,7 +35,7 @@ module.exports = {
         var output = {results: results};
         output = JSON.stringify(output);
         res.end(output);
-      })
+      });
     },
 
     post: function (data, res) {
@@ -52,7 +52,7 @@ module.exports = {
       db(query, function () {
         // Nothing doing
         res.end('');
-      }
+      })
     },
 
     // put:
