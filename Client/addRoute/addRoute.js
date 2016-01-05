@@ -9,8 +9,8 @@ angular.module('cransit.addroute', [])
     $scope.route['peak_frequency'] = $scope.peak_frequency || $scope.daytime_frequency;
     $scope.route['daytime_frequency'] = $scope.daytime_frequency;
     $scope.route['offhours_frequency'] = $scope.offhours_frequency || $scope.daytime_frequency;
-    $scope.route['service_start'] = $scope.service_start || '06:00:00';
-    $scope.route['service_end'] = $scope.service_end || '24:00:00';
+    $scope.route['service_start'] = $scope.service_start || '6';
+    $scope.route['service_end'] = $scope.service_end || '24';
     // NEED TO BE ABLE TO ADD STOPS AND POSSIBLY STREET INFO
     Routes.addOne($scope.route);
   }

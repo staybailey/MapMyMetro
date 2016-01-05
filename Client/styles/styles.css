@@ -53,44 +53,38 @@ h1 {
   margin-top: 10px;
 }
 
-.link {
+.route {
   clear: both;
   margin-bottom: 5px;
   padding: 5px;
   min-height: 50px;
 }
 
-.link:hover {
+.route:hover {
   background-color: #efe;
 }
 
-.link img {
+.route img {
   float: left;
   margin: 0 5px;
 }
 
-.link .visits {
+.route .routeName {
   float: right;
   margin-right: 10px;
   margin-left: 20px;
 }
 
-.link .visits .count {
-  font-size: 46px;
+.route .dayFrequency {
   font-weight: 600;
+  font-size: 50px
 }
 
-.link .title {
-  font-weight: 600;
+.route .serviceStart {
 }
 
-.link .original {
-  color: #aaa;
-  font-size: 12px;
-}
+.route .serviceEnd {
 
-.link .info {
-  margin-left: 55px;
 }
 
 form {

@@ -3,6 +3,12 @@ angular.module('cransit', [
   'cransit.addroute',
   'cransit.services',
   'ui.router']) 
+.directive('navbar', function () {
+  return {
+    restrict: 'E',
+    templateUrl: 'templates/navbar.html'
+  };
+})
 .config(function ($stateProvider, $urlRouterProvider) {
   $urlRouterProvider.otherwise("/routes");
 

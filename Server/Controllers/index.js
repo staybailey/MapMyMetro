@@ -6,10 +6,10 @@ module.exports = {
       models.routes.get(req, res);
     },
     post: function (req, res) {
-      models.routes.post(req.data, res);
+      models.routes.post(req.body, res);
     },
     delete: function (req, res) {
-      models.routes['delete'](req.data, res);
+      models.routes['delete'](req.body, res);
     },
     put: function (req, res) {
       models.routes.put(req, res);

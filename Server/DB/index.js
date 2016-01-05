@@ -11,7 +11,7 @@ module.exports = function (query, callback) {
     if (err) {
       console.log(err);
     } else {
-      dbConnection.query(function (err, results) {
+      dbConnection.query(query, function (err, results) {
         if (err) {
           console.log(err);
           // db will not do call back if the query was bad. For now cannot expect errors in querying

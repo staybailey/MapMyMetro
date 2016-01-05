@@ -1,19 +1,27 @@
 var db = require('../DB');
 
 var listParams = function (array) {
-  var str = '"' + array[0] + '"';  
+  var str = array[0];  
   for (var i = 1; i < array.length; i++) {
-    str += ', "' + array[i] + '"';
+    str += ', ' + array[i];
   }
   return str;
 }
 
+var listValues = function (array) {
+    var str = '"' + array[0] + '"';  
+  for (var i = 1; i < array.length; i++) {
+    str += ', "' + array[i] + '"';
+  }
+  return str;
+};
+
 var insert = function (table, params, data) {
   var vals = []
   for (var i = 0; i < params.length; i++) {
-    output.push(data[params[i]]);
+    vals.push(data[params[i]]);
   }
-  return 'INTERT INTO ' + table + ' (' + listParams(params) + ') VALUES (' + listParams(vals) + ')';
+  return 'INSERT INTO ' + table + ' (' + listParams(params) + ') VALUES (' + listValues(vals) + ')';
 }
 
 var del = function (table, identifiers) {
@@ -40,6 +48,7 @@ module.exports = {
 
     post: function (data, res) {
       var query = insert('simpleroutes', simpleroutesParams, data);
+      console.log(query);
       db(query, function () {
         // Nothing doing
         res.end('');
