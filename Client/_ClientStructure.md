@@ -1,6 +1,8 @@
 The client displays a list of all routes
 It allows users to create a new route by specifying stops and frequency and span of service
 It allows users to delete routes 
+
+
 (END BASIC APP)
 It allows users to update existing routes to modify frequency, span of service
 The cleint displays net resource cost of their changes

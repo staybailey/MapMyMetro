@@ -1,7 +1,7 @@
 var models = require('../Models');
 
 module.exports = {
-  routes: {
+  'api/routes': {
     get: function (req, res) {
       models.routes.get(req, res);
     }

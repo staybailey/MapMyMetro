@@ -1,24 +1,35 @@
-angular.module('transitCrayons', [
-  'Routes'
+angular.module('cransit', [
+  'cransit.routes',
+  'cransit.addroute',
+  'cransit.services',
   'ui.router']) {
 
-}.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
+})
+.config(function ($stateProvider, $urlRouterProvider) {
   $urlRouterProvider.otherwise("/routes");
 
   $stateProvider
-  .state('/list.routes', {
+  .state('list', {
+    templateUrl: 'app/ui-routes/list.html'
+  })
+  .state('list.routes', {
     url: '/routes',
     templateUrl: 'app/ui-routes/routes.html',
     controller: 'Routes',
-    /*
     resolve: {
-      links: function (Links) {
-        return Links.getAll();
+      routes: function (Routes) {
+        return Routes.getAll();
       }
-    */
+    }
   })
   .state('list.addRoute', {
-    url: '/addRoute',
+    url: '/addroute',
     templateUrl: 'app/ui-routes/addRoute.html',
-    controller: 'addRoute'
-  })
+    controller: 'AddRoute'
+  });
+})
+// Add run stuff
+.run(function () { 
+
+});
+
