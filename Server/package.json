@@ -8,12 +8,12 @@
   ],
   "license": "UNLICENSED",
   "private": true,
-  "devDependencies": {
-
-  },
+  "devDependencies": {},
   "dependencies": {
+    "body-parser": "^1.9.2",
+    "csv": "^0.4.6",
     "express": "^4.4.5",
     "mysql": "^2.10.0",
-    "body-parser": "^1.9.2"
+    "underscore": "^1.8.3"
   }
 }
