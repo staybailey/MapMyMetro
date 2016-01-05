@@ -47,7 +47,7 @@ module.exports = {
     },
 
     // MAKE SURE DATA IS FORMATED CORRECTLY
-    del: function (data, res) {
+    delete: function (data, res) {
       var query = del('simpleroutes', data);
       db(query, function () {
         // Nothing doing
@@ -56,7 +56,7 @@ module.exports = {
     },
 
     // put:
-  }
+  },
 
   subway: {
     get: function (req, res) {
@@ -67,26 +67,26 @@ module.exports = {
 
     },
 
-    del: function (data) {
+    delete: function (data) {
 
     },
 
     // put:
-  }
+  },
 
   // SHOULD HANDLE BUSWAYS??????
   bus: {
     get: function (req, res) {
       
-    }
+    },
 
     post: function (data, res) {
 
-    }
+    },
 
-    del: function (data, res) {
+    delete: function (data, res) {
 
-    }
+    },
     // put:
   }
-}
+};
