@@ -1,12 +1,11 @@
 var express = require('express');
-var db = require('/DB');
-var models = require('/Models');
+var db = require('./DB');
 
 var parser = require('body-parser');
 
 var router = require('./router.js');
 
-var staticData = require('/filereader/dataParser.js');
+var staticData = require('./filereader/dataParser.js');
 
 // MOVE THESE FOR FUNCS INTO SERVICES LATER
 var simpleroutesParams = ['route_id', 'route_short_name', 'trip_headsign', 
@@ -36,16 +35,20 @@ var insert = function (table, params, data) {
 // Parse txt files
 var parsedCSVs = staticData.getStaticData();
 
+// console.log(parsedCSVs);
+
 // Convert static files into simpleroutes format
-var staticSimpleRoutes = staticData.simpleroutes(parsedCSVs);
+// var staticSimpleRoutes = staticData.simpleroutes(parsedCSVs);
 
 // insert each simple route, insert into the database
+/*
 for (var key in staticSimpleRoutes) {
   var query = insert('simpleroutes', simpleroutesParams, staticSimpleRoutes[key]);
   db(query, function () {
     // Data inserted
   });
 }
+*/
 
 var app = express();
 module.exports.app = app;

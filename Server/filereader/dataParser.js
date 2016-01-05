@@ -1,24 +1,31 @@
-var csv = require('csv-parse');
+var csv = require('csv');
 var fs = require('fs');
 var underscore = require('underscore');
+var path = require('path');
 
 var tables = {
   agency: 'agency',
   routes: 'routes',
-  shapes: 'shapes',
+  //shapes: 'shapes',
   stops: 'stops',
-  stop_times: 'stop_times',
+  //stop_times: 'stop_times',
   trips: 'trips',
   calendar: 'calendar'
 }
 
 var filesToArray = function () {
-  var path;
+  var p;
   var data;
   for (var key in tables) {
-    path = '/../google_daily_transit/' + key + '.txt';
-    data = fs.readFileSync(path);
-    tables[key] = csv(data); 
+    p = path.join(__dirname, '/google_daily_transit/' + key + '.txt');
+    data = fs.readFileSync(p, 'utf8');
+    //console.log(data);
+    csv.parse(data, {delimiter: ','}, function (err, results) {
+      tables[key] = results;
+      if (key === 'stops') {
+        console.log('THIS IS THE ', key, ' TABLE:\n', tables[key]);
+      }
+    }); 
   }
   return tables;
 };
@@ -50,7 +57,7 @@ var weekdayTrip = function (trips, serviceIds) {
   for (var i = 0; i < trips.length; i++) {
     for (var j = 0; j < serviceIds.length; j++) {
       // if service id of trip matches weekday serviceId
-      if (trips[i][1] === serviceIds[j];
+      if (trips[i][1] === serviceIds[j]) {
         output.push(trips[i]);
       }
     }
@@ -152,7 +159,7 @@ var simpleroutes = function (tableObj) {
   var serviceSpans = getServiceSpan(RTDS);
   var output = {};
   for (var i = 0; i < dayRoutes.length; i++) {
-    output[dayRoutes[i][0]] = [dayRoutes[i][0], null, null, dayRoutes[i][1], dayRoutes[i][1], dayRoutes[i][1], null null];
+    output[dayRoutes[i][0]] = [dayRoutes[i][0], null, null, dayRoutes[i][1], dayRoutes[i][1], dayRoutes[i][1], null, null];
   }
   for (var key in output) {
     output[key][1] = names[key][0];
