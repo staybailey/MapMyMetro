@@ -6,28 +6,35 @@ var path = require('path');
 var tables = {
   agency: 'agency',
   routes: 'routes',
-  //shapes: 'shapes',
+  shapes: 'shapes',
   stops: 'stops',
-  //stop_times: 'stop_times',
+  stop_times: 'stop_times',
   trips: 'trips',
   calendar: 'calendar'
-}
+};
 
-var filesToArray = function () {
+
+var getStaticData = function () {
+  filesToArray('agency', ['routes', 'shapes', 'stops', 'stop_times', 'trips', 'calendar']);
+};
+
+
+var filesToArray = function (key, next) {
   var p;
   var data;
-  for (var key in tables) {
-    p = path.join(__dirname, '/google_daily_transit/' + key + '.txt');
-    data = fs.readFileSync(p, 'utf8');
-    //console.log(data);
-    csv.parse(data, {delimiter: ','}, function (err, results) {
-      tables[key] = results;
-      if (key === 'stops') {
-        console.log('THIS IS THE ', key, ' TABLE:\n', tables[key]);
-      }
-    }); 
-  }
-  return tables;
+  p = path.join(__dirname, '/google_daily_transit/' + key + '.txt');
+  data = fs.readFileSync(p, 'utf8');
+  csv.parse(data, {delimiter: ','}, function (err, results) {
+    tables[key] = results;
+    console.log(key);
+    if (next.length > 0) {
+      filesToArray(next.pop(), next);
+    } else {
+      // Done getting parsing csvs
+      console.log('done csving');
+      simpleroutes();
+    }
+  }); 
 };
 
 
@@ -40,11 +47,12 @@ var time = function (time) {
 };
 
 // returns array of service ids that are for weekday service
+// WORKING
 var weekday = function (calendar) {
   var output = [];
   for (var i = 0; i < calendar.length; i++) {
     // if service runs Monday through Thursday
-    if (calendar[i][1] && calendar[i][2] && calendar[i][3] && calendar[i][4]) {
+    if (calendar[i][1] === '1' && calendar[i][2] === '1' && calendar[i][3] === '1' && calendar[i][4] === '1') {
       output.push(calendar[i][0]);
     }
   }
@@ -52,13 +60,17 @@ var weekday = function (calendar) {
 };
 
 // returns an array of trips that are valid for the given serviceids
-var weekdayTrip = function (trips, serviceIds) {
+// WORKING SEEMINGLY
+var weekdayTrips = function (trips, serviceIds) {
   var output = [];
   for (var i = 0; i < trips.length; i++) {
     for (var j = 0; j < serviceIds.length; j++) {
       // if service id of trip matches weekday serviceId
       if (trips[i][1] === serviceIds[j]) {
         output.push(trips[i]);
+        if (serviceIds[j] !== '77443') {
+          console.log(serviceIds[j]);
+        } 
       }
     }
   }
@@ -67,15 +79,16 @@ var weekdayTrip = function (trips, serviceIds) {
 
 // Assumes RTDS is sorted by R
 // Returns an obj with route being index for its service_start, and service_end 
+// WORKING
 var getServiceSpan = function (RTDS) {
   var output = {};
   var bestStart = null;
   var bestEnd = null;
-  route = RTDS[0][0];
+  var route = RTDS[0][0];
   for (var i = 0; i < RTDS.length; i++) {
     if (route !== RTDS[i][0]) {
       if (bestStart !== null) {
-        output[route] = [bsetStart, bestEnd];
+        output[route] = [bestStart, bestEnd];
       }
       bestStart = null;
       bestEnd = null;
@@ -91,6 +104,7 @@ var getServiceSpan = function (RTDS) {
   return output
 };
 
+// WORKING
 var getNames = function (routes) {
   var output = {};
   for (var i = 0; i < routes.length; i++) {
@@ -99,21 +113,25 @@ var getNames = function (routes) {
   return output;
 };
 
+// Seemingly Works
 var makeRouteTripDepartureStopArray = function (routes, trips, stop_times) {
   var output = [];
   for (var i = 0; i < routes.length; i++) {
     for (var j = 0; j < trips.length; j++) {
       // trip is going in the 1 direction (arbitrary choice) and trip is a trip of route
-      if (routes[i][0] === trips[j][0] && (trips[j][5] === 1)) {
+      if (routes[i][0] === trips[j][0] && (trips[j][5] === '1')) {
         for (var k = 0; k < stop_times.length; k++) {
           // trips_id matches stop_times trip
           if (trips[j][2] === stop_times[k][0]) {
             // Array of route_id, trip_id, departure_time and stop_id
-            output.push([routes[i][0], trips[j][2], time(stop_times[k][2]), stop_times[3]])
+            output.push([routes[i][0], trips[j][2], time(stop_times[k][2]), stop_times[k][3]])
           }
         }
       }
     }
+  }
+  for(var test = 0; test < output.length; test += 1000) {
+    console.log(output[test]);
   }
   return output;
 };
@@ -150,13 +168,18 @@ var findDayFrequency = function (RTDS) {
   return output;
 };
 
-var simpleroutes = function (tableObj) {
-  var weekdayServiceIds = weekday(tableObj.calendar);
-  var trips = weekdayTrips(tableObj.trips, weekdayServiceIds);
-  var RTDS = makeRouteTripDepartureStopArray(tableObj.routes, trips, tableObj.stop_times);
+var simpleroutes = function () {
+  var weekdayServiceIds = weekday(tables.calendar);
+  console.log('got weekday:' /*weekdayServiceIds*/);
+  var trips = weekdayTrips(tables.trips, weekdayServiceIds);
+  console.log('gotweekdayTrips:' /*trips*/);
+  var RTDS = makeRouteTripDepartureStopArray(tables.routes, trips, tables.stop_times);
+  console.log('gotRTDS:' /*RTDS*/);
   var dayRoutes = findDayFrequency(RTDS);
-  var names = getNames(tableObj.routes);
+  console.log('gotDayRotues:'/*dayRoutes*/);
+  var names = getNames(tables.routes);
   var serviceSpans = getServiceSpan(RTDS);
+  console.log('gotServiceSpans');
   var output = {};
   for (var i = 0; i < dayRoutes.length; i++) {
     output[dayRoutes[i][0]] = [dayRoutes[i][0], null, null, dayRoutes[i][1], dayRoutes[i][1], dayRoutes[i][1], null, null];
@@ -164,14 +187,15 @@ var simpleroutes = function (tableObj) {
   for (var key in output) {
     output[key][1] = names[key][0];
     output[key][2] = names[key][1];
-    output[key][6] = serviceSpans[0];
-    output[key][7] = serviceSpans[1];
+    output[key][6] = serviceSpans[key][0];
+    output[key][7] = serviceSpans[key][1];
   }
+  console.log('simpleroutes: ', output);
   return output;
 };
 
 module.exports = {
   simpleroutes: simpleroutes,
-  getStaticData: filesToArray
+  getStaticData: getStaticData
 };
 
