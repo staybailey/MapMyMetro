@@ -32,7 +32,7 @@ var del = function (table, identifiers) {
 } 
 
 var simpleroutesParams = ['route_id', 'route_short_name', 'trip_headsign', 
-            'peak_frequency', 'daytime_frequency', 'offhours_frequency', 'service_start', 'service_end']
+            'peak_frequency', 'daytime_frequency', 'offhours_frequency', 'service_start', 'service_end'];
 
 module.exports = {
 
@@ -48,7 +48,6 @@ module.exports = {
 
     post: function (data, res) {
       var query = insert('simpleroutes', simpleroutesParams, data);
-      console.log(query);
       db(query, function () {
         // Nothing doing
         res.end('');
