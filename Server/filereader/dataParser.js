@@ -20,7 +20,17 @@ var filesToArray = function () {
     data = fs.readFileSync(path);
     tables[key] = csv(data); 
   }
-}
+  return tables;
+};
+
+
+
+// takes a string of the format ab:cd:ef and returns the number abcdef
+var time = function (time) {
+  var arr = time.split(':');
+  var output = Number(arr[0]) * 10000 + Number(arr[1]) * 100 + Number(arr[2]);
+  return output;
+};
 
 // returns array of service ids that are for weekday service
 var weekday = function (calendar) {
@@ -32,7 +42,7 @@ var weekday = function (calendar) {
     }
   }
   return output;
-}
+};
 
 // returns an array of trips that are valid for the given serviceids
 var weekdayTrip = function (trips, serviceIds) {
@@ -46,19 +56,19 @@ var weekdayTrip = function (trips, serviceIds) {
     }
   }
   return output;
-}
+};
 
 // Assumes RTDS is sorted by R
-// Returns an array w/ route, service_start, and service_end 
+// Returns an obj with route being index for its service_start, and service_end 
 var getServiceSpan = function (RTDS) {
-  var output = [];
+  var output = {};
   var bestStart = null;
   var bestEnd = null;
   route = RTDS[0][0];
   for (var i = 0; i < RTDS.length; i++) {
     if (route !== RTDS[i][0]) {
       if (bestStart !== null) {
-        output.push([route, bsetStart, bestEnd]);
+        output[route] = [bsetStart, bestEnd];
       }
       bestStart = null;
       bestEnd = null;
@@ -72,14 +82,22 @@ var getServiceSpan = function (RTDS) {
     }
   }
   return output
-}
+};
 
-var makeRouteTripDepartureStopArray = function (routes, trips, stop_times, twoDirs) {
+var getNames = function (routes) {
+  var output = {};
+  for (var i = 0; i < routes.length; i++) {
+    output[routes[i][0]] = [routes[i][2], routes[i][4]];
+  }
+  return output;
+};
+
+var makeRouteTripDepartureStopArray = function (routes, trips, stop_times) {
   var output = [];
   for (var i = 0; i < routes.length; i++) {
     for (var j = 0; j < trips.length; j++) {
       // trip is going in the 1 direction (arbitrary choice) and trip is a trip of route
-      if (routes[i][0] === trips[j][0] && (trips[j][5] === 1 || twoDirs)) {
+      if (routes[i][0] === trips[j][0] && (trips[j][5] === 1)) {
         for (var k = 0; k < stop_times.length; k++) {
           // trips_id matches stop_times trip
           if (trips[j][2] === stop_times[k][0]) {
@@ -91,18 +109,12 @@ var makeRouteTripDepartureStopArray = function (routes, trips, stop_times, twoDi
     }
   }
   return output;
-}
-
-var time = function (time) {
-  var arr = time.split(':');
-  var output = Number(arr[0]) * 10000 + Number(arr[1]) * 100 + Number(arr[2]);
-  return output;
-}
+};
 
 var cleanFrequency = function (estimate) {
   var minutes = Math.floor((estimate + 39) / 100); // 39 second "1 off buffer"
   return minutes;
-}
+};
 
 var findDayFrequency = function (RTDS) {
   var route = RTDS[0][0]
@@ -129,7 +141,30 @@ var findDayFrequency = function (RTDS) {
     }
   }
   return output;
-}
+};
 
-var 
+var simpleroutes = function (tableObj) {
+  var weekdayServiceIds = weekday(tableObj.calendar);
+  var trips = weekdayTrips(tableObj.trips, weekdayServiceIds);
+  var RTDS = makeRouteTripDepartureStopArray(tableObj.routes, trips, tableObj.stop_times);
+  var dayRoutes = findDayFrequency(RTDS);
+  var names = getNames(tableObj.routes);
+  var serviceSpans = getServiceSpan(RTDS);
+  var output = {};
+  for (var i = 0; i < dayRoutes.length; i++) {
+    output[dayRoutes[i][0]] = [dayRoutes[i][0], null, null, dayRoutes[i][1], dayRoutes[i][1], dayRoutes[i][1], null null];
+  }
+  for (var key in output) {
+    output[key][1] = names[key][0];
+    output[key][2] = names[key][1];
+    output[key][6] = serviceSpans[0];
+    output[key][7] = serviceSpans[1];
+  }
+  return output;
+};
+
+module.exports = {
+  simpleroutes: simpleroutes,
+  getStaticData: filesToArray
+};
 

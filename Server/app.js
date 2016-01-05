@@ -5,6 +5,8 @@ var parser = require('body-parser');
 
 var router = require('./router.js');
 
+var staticData = require('/filereader/dataParser.js');
+
 var app = express();
 module.exports.app = app;
 
