@@ -1,5 +1,5 @@
 angular.module('cransit.services', [])
-.factory(Routes, function ($http) {
+.factory('Routes', function ($http) {
   var addOne = function (route) {
     return $http({
       method: 'POST',
