@@ -13,6 +13,5 @@ angular.module('cransit.routes', [])
     $scope.route['service_end'] $scope.service_end || '24:00:00';
     // NEED TO BE ABLE TO ADD STOPS AND POSSIBLY STREET INFO
     Routes.addOne($scope.route);
-    
   }
 })
