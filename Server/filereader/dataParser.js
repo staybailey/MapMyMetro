@@ -14,6 +14,7 @@ var tables = {
   calendar: 'calendar'
 };
 
+var inputData;
 
 var getStaticData = function () {
   filesToArray('agency', ['routes', 'shapes', 'stops', 'stop_times', 'trips', 'calendar']);
@@ -33,18 +34,20 @@ var filesToArray = function (key, next) {
     } else {
       // Done getting parsing csvs
       console.log('done csving');
-      var inputData = simpleroutes();
-      for (var route in inputData) {
-        var query = insert('simpleroutes', simpleroutesParams, inputData[route]);
-        db(query, function () {
-          // inserted into DB
-        })
-      }
+      inputData = simpleroutes();
+      insertAll();
     }
   }); 
 };
 
-
+var insertAll = function () {
+  for (var route in inputData) {
+    var query = insert('simpleroutes', simpleroutesParams, inputData[route]);
+    db(query, function () {
+      // inserted into DB
+    })
+  }
+}
 
 // takes a string of the format ab:cd:ef and returns the number abcdef
 var time = function (time) {
