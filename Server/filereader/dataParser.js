@@ -33,7 +33,13 @@ var filesToArray = function (key, next) {
     } else {
       // Done getting parsing csvs
       console.log('done csving');
-      simpleroutes();
+      var inputData = simpleroutes();
+      for (var route in inputData) {
+        var query = insert('simpleroutes', simpleroutesParams, inputData[route]);
+        db(query, function () {
+          // inserted into DB
+        })
+      }
     }
   }); 
 };
@@ -161,10 +167,10 @@ var findDayFrequency = function (RTDS) {
     } else if (!twelveStop && RTDS[i][2] >= time('12:00:00') && RTDS[i][2] < time('13:40:00')) {
       twelveStop = RTDS[i];
     } else if (twelveStop[3] === RTDS[i][3]) {
-      current = RTDS[i][2] - twelveStop[2];
+      current = Math.abs(RTDS[i][2] - twelveStop[2]);
       if (best === null) {
         best = current;
-      } else if (RTDS[i][2] - twelveStop > 0) {
+      } else if (current > 0) {
         best = Math.min(current, best);
       }
     }
@@ -201,6 +207,7 @@ var simpleroutes = function () {
   }
   printResults.sort();
   console.log(printResults);
+
   */
   console.log('THESE ARE THE FINAL RESULTS\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
   console.log(output);
@@ -228,10 +235,11 @@ var listValues = function (array) {
 
 var insert = function (table, params, data) {
   return 'INSERT INTO ' + table + ' (' + listParams(params) + ') VALUES (' + listValues(data) + ')';
-}
+};
 
 module.exports = {
   simpleroutes: simpleroutes,
   getStaticData: getStaticData
+
 };
 
