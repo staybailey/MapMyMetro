@@ -70,14 +70,13 @@ h1 {
 }
 
 .route .routeName {
-  float: right;
-  margin-right: 10px;
-  margin-left: 20px;
+  font-weight:  600;
+  font-size: 30px;
 }
 
 .route .dayFrequency {
-  font-weight: 600;
-  font-size: 50px
+  font-weight: 200;
+  font-size: 30px
 }
 
 .route .serviceStart {
