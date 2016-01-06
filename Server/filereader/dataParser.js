@@ -2,6 +2,7 @@ var csv = require('csv');
 var fs = require('fs');
 var underscore = require('underscore');
 var path = require('path');
+var db = require('../DB');
 
 var tables = {
   agency: 'agency',
@@ -51,8 +52,8 @@ var time = function (time) {
 var weekday = function (calendar) {
   var output = [];
   for (var i = 0; i < calendar.length; i++) {
-    // if service runs Monday through Thursday
-    if (calendar[i][1] === '1' && calendar[i][2] === '1' && calendar[i][3] === '1' && calendar[i][4] === '1') {
+    // if service runs Tuesday through Thursday it must be a form of typical service
+    if (calendar[i][2] === '1' && calendar[i][3] === '1' && calendar[i][4] === '1') {
       output.push(calendar[i][0]);
     }
   }
@@ -67,10 +68,7 @@ var weekdayTrips = function (trips, serviceIds) {
     for (var j = 0; j < serviceIds.length; j++) {
       // if service id of trip matches weekday serviceId
       if (trips[i][1] === serviceIds[j]) {
-        output.push(trips[i]);
-        if (serviceIds[j] !== '77443') {
-          console.log(serviceIds[j]);
-        } 
+        output.push(trips[i]); 
       }
     }
   }
@@ -113,7 +111,7 @@ var getNames = function (routes) {
   return output;
 };
 
-// Seemingly Works
+// Returns an array of four item tuples of form [route_id, trip_id, stop_time, stop_id]
 var makeRouteTripDepartureStopArray = function (routes, trips, stop_times) {
   var output = [];
   for (var i = 0; i < routes.length; i++) {
@@ -130,9 +128,12 @@ var makeRouteTripDepartureStopArray = function (routes, trips, stop_times) {
       }
     }
   }
+  /*
   for(var test = 0; test < output.length; test += 1000) {
     console.log(output[test]);
   }
+  console.log(test);
+  */
   return output;
 };
 
@@ -146,18 +147,21 @@ var findDayFrequency = function (RTDS) {
   var twelveStop = false;
   var best = null;
   var output = [];
+  var current;
+  var count = 0;
   for (var i = 0; i < RTDS.length; i++) {
     if (route !== RTDS[i][0]) {
+      count++;
       if (best !== null) {
         output.push([route, cleanFrequency(best)]);
       }
       route = RTDS[i][0];
       best = null;
       twelveStop = false;
-    } else if (!twelveStop && RTDS[i][2] >= time('12:00:00')) {
+    } else if (!twelveStop && RTDS[i][2] >= time('12:00:00') && RTDS[i][2] < time('13:40:00')) {
       twelveStop = RTDS[i];
     } else if (twelveStop[3] === RTDS[i][3]) {
-      var current = RTDS[i][2] - twelveStop[2];
+      current = RTDS[i][2] - twelveStop[2];
       if (best === null) {
         best = current;
       } else if (RTDS[i][2] - twelveStop > 0) {
@@ -172,11 +176,11 @@ var simpleroutes = function () {
   var weekdayServiceIds = weekday(tables.calendar);
   console.log('got weekday:' /*weekdayServiceIds*/);
   var trips = weekdayTrips(tables.trips, weekdayServiceIds);
-  console.log('gotweekdayTrips:' /*trips*/);
+  console.log('gotweekdayTrips:', trips.length /*trips*/);
   var RTDS = makeRouteTripDepartureStopArray(tables.routes, trips, tables.stop_times);
-  console.log('gotRTDS:' /*RTDS*/);
+  console.log('gotRTDS:', RTDS.length, ' should ~=', trips.length * 20 /*RTDS*/);
   var dayRoutes = findDayFrequency(RTDS);
-  console.log('gotDayRotues:'/*dayRoutes*/);
+  console.log('gotDayRotues:', dayRoutes.length);
   var names = getNames(tables.routes);
   var serviceSpans = getServiceSpan(RTDS);
   console.log('gotServiceSpans');
@@ -190,9 +194,41 @@ var simpleroutes = function () {
     output[key][6] = serviceSpans[key][0];
     output[key][7] = serviceSpans[key][1];
   }
-  console.log('simpleroutes: ', output);
+  /*
+  var printResults = []
+  for (var key2 in output) {
+    printResults.push(output[key2][1]);
+  }
+  printResults.sort();
+  console.log(printResults);
+  */
+  console.log('THESE ARE THE FINAL RESULTS\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+  console.log(output);
   return output;
 };
+
+var simpleroutesParams = ['route_id', 'route_short_name', 'trip_headsign', 
+            'peak_frequency', 'daytime_frequency', 'offhours_frequency', 'service_start', 'service_end'];
+
+var listParams = function (array) {
+  var str = array[0];  
+  for (var i = 1; i < array.length; i++) {
+    str += ', ' + array[i];
+  }
+  return str;
+}
+
+var listValues = function (array) {
+    var str = '"' + array[0] + '"';  
+  for (var i = 1; i < array.length; i++) {
+    str += ', "' + array[i] + '"';
+  }
+  return str;
+};
+
+var insert = function (table, params, data) {
+  return 'INSERT INTO ' + table + ' (' + listParams(params) + ') VALUES (' + listValues(data) + ')';
+}
 
 module.exports = {
   simpleroutes: simpleroutes,
