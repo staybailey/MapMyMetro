@@ -29,7 +29,7 @@ for (var key in staticSimpleRoutes) {
 var app = express();
 module.exports.app = app;
 
-app.set("port", 3000);
+app.set("port", process.env.PORT || 3000);
 
 app.use(parser.json());
 
