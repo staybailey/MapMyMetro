@@ -15,5 +15,8 @@
     "csv": "^0.4.6",
     "express": "^4.4.5",
     "mysql": "^2.10.0"
+  },
+  "scrips": {
+    "postinstall": "bower install"
   }
 }
