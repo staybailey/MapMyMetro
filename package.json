@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "express": "^4.4.5",
+    "csv": "^0.4.6",
     "mysql": "^2.10.0",
     "body-parser": "^1.9.2"
   }
