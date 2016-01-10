@@ -1,5 +1,5 @@
 var router = require('express').Router();
-var controllers = require('./Controllers');
+var controllers = require('./controllers');
 
 for (var route in controllers) {
   router.route('/' + route)
