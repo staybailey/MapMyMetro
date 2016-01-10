@@ -1,6 +1,5 @@
 var csv = require('csv');
 var fs = require('fs');
-var underscore = require('underscore');
 var path = require('path');
 var db = require('../DB');
 
