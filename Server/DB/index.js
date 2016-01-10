@@ -4,7 +4,7 @@ module.exports = function (query, callback) {
   var dbConnection;
   dbConnection = mysql.createConnection({
     user: "root",  // Consider fixing for better db safety
-    password: "stay",
+    password: "bernie",
     database: "kcm"
   });
   dbConnection.connect(function (err) {

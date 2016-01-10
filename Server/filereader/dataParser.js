@@ -212,8 +212,6 @@ var simpleroutes = function () {
   console.log(printResults);
 
   */
-  console.log('THESE ARE THE FINAL RESULTS\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
-  console.log(output);
   return output;
 };
 
