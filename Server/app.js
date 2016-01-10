@@ -35,7 +35,7 @@ app.use(parser.json());
 
 app.use("/api", router);
 
-app.use(express.static(__dirname + "/../client"));
+app.use(express.static(__dirname + "/../Client"));
 
 if (!module.parent) {
   app.listen(app.get("port"));
