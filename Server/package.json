@@ -1,0 +1,19 @@
+{
+  "name": "Cransit",
+  "version": "0.0.0",
+  "description": "App that allows users to add transit routes to their local transit system and evaluate these additions or changes",
+  "author": "Alex Bailey <staybailey@gmail.com>",
+  "contributors": [
+    "Alex Bailey"
+  ],
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {},
+  "dependencies": {
+    "body-parser": "^1.9.2",
+    "csv": "^0.4.6",
+    "express": "^4.4.5",
+    "mysql": "^2.10.0",
+    "underscore": "^1.8.3"
+  }
+}
