@@ -9,11 +9,11 @@ module.exports = function (query, callback) {
   });
   dbConnection.connect(function (err) {
     if (err) {
-      console.log(err);
+      console.log('NO CONNECTIN', err);
     } else {
       dbConnection.query(query, function (err, results) {
         if (err) {
-          console.log(err);
+          console.log('Query fail',err);
           // db will not do call back if the query was bad. For now cannot expect errors in querying
         } else {
           callback(results);
