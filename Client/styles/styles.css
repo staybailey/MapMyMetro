@@ -149,3 +149,8 @@ input.ng-dirty.ng-valid {
 .creator .message {
   clear: both;
 }
+
+#map {
+  height: 400px;
+  width: 500px;
+}

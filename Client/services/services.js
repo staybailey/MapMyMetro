@@ -14,7 +14,6 @@ angular.module('cransit.services', [])
       url: '/api/routes' // NOTE THAT IT IS API AND CHANGE IN SERVER IF NECESSARY
     })
     .then(function (resp) {
-      console.log(resp.data);
       return resp.data.results;
     });
   };

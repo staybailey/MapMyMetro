@@ -30,6 +30,11 @@ angular.module('cransit', [
     url: '/addroute',
     templateUrl: 'ui-routes/list.addRoute.html',
     controller: 'AddRoute'
+  })
+  .state('map', {
+    url: '/map',
+    templateUrl: 'ui-routes/map.html',
+    controller: 'Map'
   });
 })
 // Add run stuff

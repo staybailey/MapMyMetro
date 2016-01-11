@@ -11,9 +11,13 @@
     <!-- the ng-view directive is where our templates will be loaded into when naviagted to -->
     <!--<div ng-view></div>-->
     <div ui-view></div>
+    <div id="map"></div>
+    <script src="https://maps.googleapis.com/maps/api/js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
     <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
+    <script src="bower_components/angular-google-maps/dist/angular-google-maps.js"></script>
+    <script src="map/initializeMap.js"></script>
     <script src="routes/routes.js"></script>
     <script src="addRoute/addRoute.js"></script>
     <script src="services/services.js"></script>
