@@ -1,6 +1,7 @@
 angular.module('cransit', [
   'cransit.routes',
   'cransit.addroute',
+  'cransit.map',
   'cransit.services',
   'ui.router']) 
 .directive('navbar', function () {
@@ -9,6 +10,18 @@ angular.module('cransit', [
     templateUrl: 'templates/navbar.html'
   };
 })
+/*
+.directive('mymap', function () {
+  return {
+    restrict: 'E',
+    template: '<div></div>',
+    replace: true,
+    link: function (scope, element, attrs) {
+
+    }
+  };
+})
+*/
 .config(function ($stateProvider, $urlRouterProvider) {
   $urlRouterProvider.otherwise("/routes");
 
