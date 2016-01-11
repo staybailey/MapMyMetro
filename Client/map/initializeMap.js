@@ -1,7 +1,8 @@
 
 angular.module('cransit.map', [])
 .controller('Map', function ($scope) {
-  $scope.stops = [];
+  $scope.start = null
+  $scope.end = null
   $scope.map; 
   var initialize = function () {
     var mapCanvas = document.getElementById('map');
@@ -13,11 +14,8 @@ angular.module('cransit.map', [])
     $scope.map = new google.maps.Map(mapCanvas, mapOptions);
     $scope.map.addListener('click', function (event) {
     	var metroIcon = {
-    	  //size: new google.maps.Size(30, 30),
-    	 // origin: new google.maps.Point(0, 0),
-    	 // anchor: new google.maps.Point(0, 30),
     	  url: '../assets/metroIcon.png',
-    	  scaledSize: new google.maps.Size(30, 30)
+    	  scaledSize: new google.maps.Size(30, 35)
     	}
         var marker = new google.maps.Marker({
     	  position: event.latLng,
@@ -25,9 +23,31 @@ angular.module('cransit.map', [])
     	  title: "Station",
     	  icon: metroIcon
         });
-        console.log(marker.position);
+        addStop(marker);
+        extendLine();
     })
   };
+  var addStop = function (marker) {
+  	var node = {value: marker, next: null, prev: null};
+  	if ($scope.start) {
+      $scope.end.next = node;
+      node.prev = $scope.end;
+      $scope.end = node;
+  	} else {
+      $scope.start = node;
+  	  $scope.end = node;
+  	}
+  }
+  var extendLine = function () {
+    var segment = new google.maps.Polyline({
+    	path: [$scope.end.prev.value.position, $scope.end.value.position],
+    	geodesic: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: 1.0,
+        strokeWeight: 2
+    })
+    segment.setMap($scope.map);
+  }
   var setStops = function () {
   	var marker = new google.maps.Marker({
   	  position: new google.maps.LatLng(47.6500, 122.3400),
