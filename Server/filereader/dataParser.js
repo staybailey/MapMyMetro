@@ -56,7 +56,6 @@ var time = function (time) {
 };
 
 // returns array of service ids that are for weekday service
-// WORKING
 var weekday = function (calendar) {
   var output = [];
   for (var i = 0; i < calendar.length; i++) {
@@ -69,7 +68,6 @@ var weekday = function (calendar) {
 };
 
 // returns an array of trips that are valid for the given serviceids
-// WORKING SEEMINGLY
 var weekdayTrips = function (trips, serviceIds) {
   var output = [];
   for (var i = 0; i < trips.length; i++) {
@@ -85,7 +83,6 @@ var weekdayTrips = function (trips, serviceIds) {
 
 // Assumes RTDS is sorted by R
 // Returns an obj with route being index for its service_start, and service_end 
-// WORKING
 var getServiceSpan = function (RTDS) {
   var output = {};
   var bestStart = null;
@@ -110,7 +107,8 @@ var getServiceSpan = function (RTDS) {
   return output
 };
 
-// WORKING
+// returns obj with route_id being key and value being a tuple 
+// tuple value 0 being the short name and value 1 being the description
 var getNames = function (routes) {
   var output = {};
   for (var i = 0; i < routes.length; i++) {
@@ -136,12 +134,6 @@ var makeRouteTripDepartureStopArray = function (routes, trips, stop_times) {
       }
     }
   }
-  /*
-  for(var test = 0; test < output.length; test += 1000) {
-    console.log(output[test]);
-  }
-  console.log(test);
-  */
   return output;
 };
 

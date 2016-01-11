@@ -1,6 +1,27 @@
 
 angular.module('cransit.map', [])
 .controller('Map', function ($scope) {
+  $scope.route = function () {
+    var stops = [];
+    var segments = [null]; // ugly, but first stop does not have segment
+    var addStop = function (marker) {
+      stops.push(marker);
+      stops.addSegment(stops.length - 1, Math.max(stops.length - 2, 0));
+    }
+    var addSegment = function (stop1, stop2) {
+      var segment = new google.maps.Polyline({
+        path: [stops[stop1].position, stops[stop2].position],
+        geodesic: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: 1.0,
+        strokeWeight: 2
+      })
+      segments[stop1] = segment;
+      segment.setMap($scope.map);
+      }
+    }
+    // Finish/confirm it works
+  }
   $scope.start = null
   $scope.end = null
   $scope.map; 
@@ -12,6 +33,7 @@ angular.module('cransit.map', [])
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     $scope.map = new google.maps.Map(mapCanvas, mapOptions);
+    // Effectively everything below here is for building a new route (plus $scope.start and $scope.end above)
     $scope.map.addListener('click', function (event) {
     	var metroIcon = {
     	  url: '../assets/metroIcon.png',
@@ -27,6 +49,7 @@ angular.module('cransit.map', [])
         extendLine();
     })
   };
+
   var addStop = function (marker) {
   	var node = {value: marker, next: null, prev: null};
   	if ($scope.start) {
@@ -37,7 +60,8 @@ angular.module('cransit.map', [])
       $scope.start = node;
   	  $scope.end = node;
   	}
-  }
+  };
+
   var extendLine = function () {
     var segment = new google.maps.Polyline({
     	path: [$scope.end.prev.value.position, $scope.end.value.position],
@@ -47,15 +71,10 @@ angular.module('cransit.map', [])
         strokeWeight: 2
     })
     segment.setMap($scope.map);
-  }
-  var setStops = function () {
-  	var marker = new google.maps.Marker({
-  	  position: new google.maps.LatLng(47.6500, 122.3400),
-  	  map: $scope.map
-  	});
   };
+
+
   initialize();
-  setStops();
 
 });
 
