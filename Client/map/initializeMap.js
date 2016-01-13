@@ -1,43 +1,47 @@
 angular.module('cransit.map', [])
 .controller('Map', function ($scope) { 
   var route = function (name) {
-    var stops = [];
     var output = {};
+    var direction = false;
     output.name = name;
-    var makeStop = function (marker, index) {
-      return {
-        marker: marker, 
-        prev: stops[index - 1], 
-        next: stops[index + 1], 
-        segment: addSegment(marker, index === 0 ? marker : stops[index - 1].marker)}
+    var makeStop = function (marker, prev, next) {
+      console.log(prev, "AND", next)
+      var nextSegment;
+      var prevSegment;
+      if (prev) {
+        prevSegment = addSegment(marker, prev);
+        marker.prev = prev;
+        marker.prev.next = marker;
+        marker.prevSegment = prevSegment; 
+        if (next) {
+          marker.prev.nextSegment.setMap(null);
+        }
+        marker.prev.nextSegment = prevSegment;
+      }
+      if (next) {
+        nextSegment = addSegment(marker, next);
+        marker.next = next;
+        marker.next.prev = marker;
+        marker.nextSegment = nextSegment;
+        if (prev) {
+          marker.next.prevSegment.setMap(null);
+        }
+        marker.next.prevSegment = nextSegment;
+      }
+      return marker;
     }
     output.addStop = function (marker) {
-      var index;
-      var stop;
-      if ($scope.marker) {
-        index = 0;
-        while (index < stops.length && stops[index].marker !== $scope.marker) {
-          index++;
-        }
-        stops.splice(index + 1, 0, null);
-        stop = makeStop(marker, index + 1)
-        stops[index].next = stop;
-        stops[index + 1] = stop;
-        stops[index + 2].prev = stop;
-        stops[index + 2].segment.setMap(null);
-        stops[index + 2].segment = addSegment(stops[index + 2].marker, stop.marker);
+      if ($scope.stop && direction) {
+        $scope.stop = makeStop(marker, $scope.stop.prev, $scope.stop);
+      } else if ($scope.stop) {
+        $scope.stop = makeStop(marker, $scope.stop, $scope.stop.next);        
       } else {
-        index = stops.length;
-        stop = makeStop(marker, index)
-        stops[index] = stop;
-        if (index > 0) {
-          stops[index - 1].next = stop;
-        }
+        $scope.stop = makeStop(marker);
       }     
     };
-    var addSegment = function (marker1, marker2) {
+    var addSegment = function (prev, next) {
       var segment = new google.maps.Polyline({
-        path: [marker1.position, marker2.position],
+        path: [prev.position, next.position],
         geodesic: true,
         strokeColor: '#FF0000',
         strokeOpacity: 1.0,
@@ -46,32 +50,29 @@ angular.module('cransit.map', [])
       segment.setMap($scope.map);
       return segment;
     };
-    var deleteSegments = function (stop) {
-      stop.segment.setMap(null);
-      if (stop.next) {
-        stop.next.segment.setMap(null);
+    output.deleteStop = function (stop) {
+      if (stop.prev && stop.next) {
+        stop.prev.next = stop.next;
+        stop.next.prev = stop.prev;
+        stop.prev.nextSegment.setMap(null);
+        stop.next.prevSegment.setMap(null);
+        var segment = addSegment(stop.prev, stop.next)
+        stop.next.prevSegment = segment;
+        stop.prev.nextSegment = segment;
+      } else if (stop.next) {
+        stop.next.prev = null;
+        stop.next.prevSegment.setMap(null);
+      } else if (stop.prev) {
+        stop.prev.next = null;
+        stop.prev.nextSegment.setMap(null);
       }
-    }
-    output.deleteStop = function (marker) {
-      var index = 0;
-      while (index < stops.length && stops[index].marker !== marker) {
-        index++;
-      }
-      stops[index].marker.setMap(null);
-      deleteSegments(stops[index]);
-      stops.splice(index, 1);
-      if (stops[index]) {
-        stops[index ].segment = addSegment(stops[index].marker, stops[index - 1].marker);
-        stops[index].prev = stops[index - 1];
-        stops[index - 1].next = stops[index];
-      }
-      console.log($scope.marker);
+      stop.setMap(null);
     };   // Finish/confirm it works
     return output;
   };
   $scope.map;
   $scope.route;
-  $scope.marker = false; 
+  $scope.stop = null; 
   var initialize = function () {
     var mapCanvas = document.getElementById('map');
     var mapOptions = {
@@ -94,11 +95,11 @@ angular.module('cransit.map', [])
     	  icon: metroIcon
       });
       marker.addListener('dblclick', function (event) {
-        $scope.route.deleteStop(marker);
-        $scope.marker !== marker && $scope.marker;
+        $scope.stop = $scope.stop.prev || $scope.stop.next;
+        $scope.route.deleteStop(marker); // same as marker
       });
       marker.addListener('click', function (event) {
-        $scope.marker = !$scope.marker && marker;
+        $scope.stop = marker;
       });
       $scope.route.addStop(marker);
     });
