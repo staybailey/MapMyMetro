@@ -2,7 +2,6 @@ angular.module('cransit.map', [])
 .controller('Map', function ($scope) { 
   var route = function (name) {
     var output = {};
-    var direction = false;
     output.name = name;
     var makeStop = function (marker, prev, next) {
       console.log(prev, "AND", next)
@@ -31,7 +30,7 @@ angular.module('cransit.map', [])
       return marker;
     }
     output.addStop = function (marker) {
-      if ($scope.stop && direction) {
+      if ($scope.stop && $scope.direction) {
         $scope.stop = makeStop(marker, $scope.stop.prev, $scope.stop);
       } else if ($scope.stop) {
         $scope.stop = makeStop(marker, $scope.stop, $scope.stop.next);        
@@ -68,11 +67,26 @@ angular.module('cransit.map', [])
       }
       stop.setMap(null);
     };   // Finish/confirm it works
+    output.updatePaths = function (stop) {
+      if (stop.next) {
+        var nextSegment = addSegment(stop, stop.next);
+        stop.nextSegment.setMap(null);
+        stop.next.prevSegment = nextSegment;
+        stop.nextSegment = nextSegment;
+      }
+      if (stop.prev) {
+        var prevSegment = addSegment(stop, stop.prev);
+        stop.prevSegment.setMap(null);
+        stop.prev.nextSegment = prevSegment;
+        stop.prevSegment = prevSegment
+      }
+    }
     return output;
   };
   $scope.map;
   $scope.route;
   $scope.stop = null; 
+  $scope.direction = false;
   var initialize = function () {
     var mapCanvas = document.getElementById('map');
     var mapOptions = {
@@ -92,14 +106,24 @@ angular.module('cransit.map', [])
     	  position: event.latLng,
     	  map: $scope.map,
     	  title: "Station",
-    	  icon: metroIcon
+    	  icon: metroIcon,
+        draggable: true
       });
       marker.addListener('dblclick', function (event) {
-        // should be reverse for reverse direction
-        $scope.stop = $scope.stop.prev || $scope.stop.next;
+        if ($scope.route.direction) {
+          $scope.stop = $scope.stop.next || $scope.stop.prev;
+        } else {
+          $scope.stop = $scope.stop.prev || $scope.stop.next;
+        }
         $scope.route.deleteStop(marker); // same as marker
       });
       marker.addListener('click', function (event) {
+        $scope.stop = marker;
+      });
+      marker.addListener('drag', function (event) {
+        $scope.route.updatePaths(marker)
+      })
+      marker.addListener('dragstart', function (event) {
         $scope.stop = marker;
       });
       $scope.route.addStop(marker);
