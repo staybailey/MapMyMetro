@@ -95,6 +95,7 @@ angular.module('cransit.map', [])
     	  icon: metroIcon
       });
       marker.addListener('dblclick', function (event) {
+        // should be reverse for reverse direction
         $scope.stop = $scope.stop.prev || $scope.stop.next;
         $scope.route.deleteStop(marker); // same as marker
       });
