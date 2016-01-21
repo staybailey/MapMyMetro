@@ -1,8 +1,10 @@
 angular.module('cransit.map', [])
-.controller('Map', function ($scope) { 
+.controller('Map', function ($scope, Routes) { 
   var route = function (name) {
     var output = {};
     output.name = name;
+    output.selectedStop = null;
+    output.daytime_frequency = 5;
     var makeStop = function (marker, prev, next) {
       console.log(prev, "AND", next)
       var nextSegment;
@@ -28,14 +30,14 @@ angular.module('cransit.map', [])
         marker.next.prevSegment = nextSegment;
       }
       return marker;
-    }
+    };
     output.addStop = function (marker) {
-      if ($scope.stop && $scope.direction) {
-        $scope.stop = makeStop(marker, $scope.stop.prev, $scope.stop);
-      } else if ($scope.stop) {
-        $scope.stop = makeStop(marker, $scope.stop, $scope.stop.next);        
+      if (output.selectedStop && $scope.direction) {
+        output.selectedStop = makeStop(marker, output.selectedStop.prev, output.selectedStop);
+      } else if (output.selectedStop) {
+        output.selectedStop = makeStop(marker, output.selectedStop, output.selectedStop.next);        
       } else {
-        $scope.stop = makeStop(marker);
+        output.selectedStop = makeStop(marker);
       }     
     };
     var addSegment = function (prev, next) {
@@ -81,12 +83,45 @@ angular.module('cransit.map', [])
         stop.prevSegment = prevSegment
       }
     }
+    var getPositions = function () {
+      var result = [];
+      var stop = output.selectedStop;
+      while (stop.prev) {
+        stop = stop.prev;
+      }
+      while (stop) {
+        console.log(stop);
+        result.push({lat: stop.getPosition().lat(), lon: stop.getPosition().lng()});
+        stop = stop.next;
+      }
+      return result;
+    };
+    output.getRouteData = function () {
+      // DO STUFF TO GET ROUTE DATA
+      result = {};
+      result['route_id'] = 1; // FIX LATER
+      result['route_short_name'] = output.name;
+      result['trip_headsign'] = output.description || '';
+      result['peak_frequency'] = output.peak_frequency || output.daytime_frequency;
+      result['daytime_frequency'] = output.daytime_frequency;
+      result['offhours_frequency'] = output.offhours_frequency || output.daytime_frequency;
+      result['service_start'] = output.service_start || '6';
+      result['service_end'] = output.service_end || '24';
+      result['stops'] = getPositions();
+      return result;
+    }
+    console.log(output.name);
     return output;
   };
   $scope.map;
   $scope.route;
-  $scope.stop = null; 
   $scope.direction = false;
+  $scope.saveRoute = function () {
+    Routes.addOne($scope.route.getRouteData());
+  }
+  $scope.createRoute = function () {
+    $scope.route = route('K line');
+  }
   var initialize = function () {
     var mapCanvas = document.getElementById('map');
     var mapOptions = {
@@ -96,7 +131,7 @@ angular.module('cransit.map', [])
     };
     $scope.map = new google.maps.Map(mapCanvas, mapOptions);
     // Effectively everything below here is for building a new route (plus $scope.start and $scope.end above)
-    $scope.route = route();
+    $scope.route = route('Y line');
     $scope.map.addListener('click', function (event) {
     	var metroIcon = {
     	  url: '../assets/metroIcon.png',
@@ -111,20 +146,20 @@ angular.module('cransit.map', [])
       });
       marker.addListener('dblclick', function (event) {
         if ($scope.route.direction) {
-          $scope.stop = $scope.stop.next || $scope.stop.prev;
+          $scope.route.selectedStop = $scope.route.selectedStop.next || $scope.route.selectedStop.prev;
         } else {
-          $scope.stop = $scope.stop.prev || $scope.stop.next;
+          $scope.route.selectedStop = $scope.route.selectedStop.prev || $scope.route.selectedStop.next;
         }
         $scope.route.deleteStop(marker); // same as marker
       });
       marker.addListener('click', function (event) {
-        $scope.stop = marker;
+        $scope.route.selectedStop = marker;
       });
       marker.addListener('drag', function (event) {
         $scope.route.updatePaths(marker)
       })
       marker.addListener('dragstart', function (event) {
-        $scope.stop = marker;
+        $scope.route.selectedStop = marker;
       });
       $scope.route.addStop(marker);
     });
@@ -133,15 +168,3 @@ angular.module('cransit.map', [])
   initialize();
 });
 
-/*
-var initialize = function () {
-  var mapCanvas = document.getElementById('map');
-  var mapOptions = {
-  	center: new google.maps.LatLng(44.5403, -78.5463),
-    zoom: 8,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  };
-  var map = new google.maps.Map(mapCanvas, mapOptions);
-};
-google.maps.event.addDomListener(window, 'load', initialize)
-*/

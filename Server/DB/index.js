@@ -9,7 +9,7 @@ module.exports = function (query, callback) {
   });
   dbConnection.connect(function (err) {
     if (err) {
-      console.log('NO CONNECTIN', err);
+      console.log('NO CONNECTION', err);
     } else {
       dbConnection.query(query, function (err, results) {
         if (err) {

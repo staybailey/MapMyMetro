@@ -34,6 +34,8 @@ var del = function (table, identifiers) {
 var simpleroutesParams = ['route_id', 'route_short_name', 'trip_headsign', 
             'peak_frequency', 'daytime_frequency', 'offhours_frequency', 'service_start', 'service_end'];
 
+var shapesParams = ['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'shape_pt_sequence', 'shape_dist_traveled'];
+
 module.exports = {
 
   routes: {
@@ -52,6 +54,16 @@ module.exports = {
         // Nothing doing
         res.end('');
       });
+      var stop = {}
+      for (var i = 0 i < data.stops.length; i++) { // need error check
+        stop['shape_pt_lat'] = data.stops[i]['lat'];
+        stop['shape_pt_lon'] = data.stops[i]['lon'];
+        stop['shape_pt_sequence'] = i;
+        stop['shape_dist_traveled'] = -1 // N/A
+        stop['shape_id'] = 7777; // dummy value
+        query = insert('shapes', shapesParams, data);
+      }
+      
     },
 
     // MAKE SURE DATA IS FORMATED CORRECTLY
