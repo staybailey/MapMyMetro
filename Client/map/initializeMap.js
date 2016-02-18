@@ -96,18 +96,22 @@ angular.module('cransit.map', [])
       }
       return result;
     };
-    output.getRouteData = function () {
+    output.setRouteData = function () {
       // DO STUFF TO GET ROUTE DATA
       result = {};
       result['route_id'] = 1; // FIX LATER
-      result['route_short_name'] = output.name;
-      result['trip_headsign'] = output.description || '';
-      result['peak_frequency'] = output.peak_frequency || output.daytime_frequency;
-      result['daytime_frequency'] = output.daytime_frequency;
-      result['offhours_frequency'] = output.offhours_frequency || output.daytime_frequency;
-      result['service_start'] = output.service_start || '6';
-      result['service_end'] = output.service_end || '24';
+      result['route_short_name'] = $scope.name || output.name;
+      result['trip_headsign'] = $scope.description || output.description || '';
+      result['peak_frequency'] = $scope.daytime_frequency || output.peak_frequency || output.daytime_frequency;
+      result['daytime_frequency'] = $scope.daytime_frequency || output.daytime_frequency;
+      result['offhours_frequency'] = $scope.daytime_frequency || output.offhours_frequency || output.daytime_frequency;
+      result['service_start'] = $scope.service_start || output.service_start || '6';
+      result['service_end'] = $scope.service_end || output.service_end || '24';
+      for (var key in result) {
+        console.log(result[key]);
+      }
       result['stops'] = getPositions();
+
       return result;
     }
     console.log(output.name);
@@ -115,9 +119,11 @@ angular.module('cransit.map', [])
   };
   $scope.map;
   $scope.route;
+  $scope.name;
+
   $scope.direction = false;
   $scope.saveRoute = function () {
-    Routes.addOne($scope.route.getRouteData());
+    Routes.addOne($scope.route.setRouteData());
   }
   $scope.createRoute = function () {
     $scope.route = route('K line');
@@ -145,7 +151,7 @@ angular.module('cransit.map', [])
         draggable: true
       });
       marker.addListener('dblclick', function (event) {
-        if ($scope.route.direction) {
+        if ($scope.direction) {
           $scope.route.selectedStop = $scope.route.selectedStop.next || $scope.route.selectedStop.prev;
         } else {
           $scope.route.selectedStop = $scope.route.selectedStop.prev || $scope.route.selectedStop.next;

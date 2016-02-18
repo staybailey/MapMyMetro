@@ -55,7 +55,7 @@ module.exports = {
         res.end('');
       });
       var stop = {}
-      for (var i = 0 i < data.stops.length; i++) { // need error check
+      for (var i = 0; i < data.stops.length; i++) { // need error check
         stop['shape_pt_lat'] = data.stops[i]['lat'];
         stop['shape_pt_lon'] = data.stops[i]['lon'];
         stop['shape_pt_sequence'] = i;

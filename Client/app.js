@@ -10,6 +10,12 @@ angular.module('cransit', [
     templateUrl: 'templates/navbar.html'
   };
 })
+.directive('addroute', function () { 
+  return {
+    restrict: 'E',
+    templateUrl: 'templates/addRoute.html'
+  };
+})
 /*
 .directive('mymap', function () {
   return {
