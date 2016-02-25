@@ -1,12 +1,89 @@
 angular.module('cransit.map', [])
-.controller('Map', function ($scope, Routes) { 
-  var route = function (name) {
+.controller('Map', function ($scope, Routes, routes) {
+
+  /* route class 
+  A route class instatiation is defined by routeObj properties
+  and methods/properties for manipulating the routeObj
+  */
+
+  var Route = function (routeObj) {
     var output = {};
-    output.name = name;
-    output.selectedStop = null;
-    output.daytime_frequency = 5;
-    var makeStop = function (marker, prev, next) {
-      console.log(prev, "AND", next)
+    output.selected = true;
+    output.routeData = routeObj || {
+      name: '',
+      description: '',
+      peak_frequency: null,
+      daytime_frequency: null,
+      offhours_frequency: null,
+      service_start: null,
+      service_end: null,
+      shape: [],
+      shape_id: Math.floor(Math.random() * 50000000) + 50000000,
+      subway: true // Only subway routes can be edited
+    };
+    // The currently selected point in the route used to determine how the next point should be connected
+    var selectedStop = null;
+    var direction = false;
+    // reverses the direction in which points get added to the route
+    output.reverse = function () {
+      direction = !direction;
+    }
+    // maps a point adding it to the route, with a particular icon if passed in 
+    // lat can also be treated as a latLng object if lng is falsey
+    var makeMarker = function (lat, lng, icon) {
+      var position = lng ? new google.maps.LatLng(lat, lng) : lat;
+      icon = icon || {
+          url: '../assets/metroIcon.png',
+          scaledSize: new google.maps.Size(0, 0)
+        };
+      var marker = new google.maps.Marker({
+        position: position,
+        map: $scope.map,
+        title: "Station",
+        icon: icon,
+        draggable: true
+      })
+      return marker
+    }
+    // maps a stop point, adding it to the route.
+    output.mapStop = function (lat, lng) {
+      console.log('mapStop');
+      var metroIcon = {
+        url: '../assets/metroIcon.png',
+        scaledSize: new google.maps.Size(30, 35)
+      }
+      return newPoint(makeMarker(lat, lng, metroIcon), 'stop');
+    }
+
+    output.mapPoint = function (lat, lng) {
+      return newPoint(makeMarker(lat, lng), 'point');
+    }
+    var newPoint = function (marker, type) {
+      marker.addListener('dblclick', function (event) {
+          if (this.direction) {
+            selectedStop = selectedStop.next || selectedStop.prev;
+          } else {
+            selectedStop = selectedStop.prev || selectedStop.next;
+          }
+          deleteStop(marker); // same as marker
+      });
+      marker.addListener('click', function (event) {
+        selectedStop = marker;
+        $scope.route = output;
+      });
+      marker.addListener('drag', function (event) {
+        console.log(output.selected);
+        console.log('Draging marker');
+        updatePaths(marker)
+      })
+      marker.addListener('dragstart', function (event) {
+        selectedStop = marker;
+        $scope.route = output;
+      });
+      marker.point_type = type;
+      addPoint(marker);
+    };
+    var makePoint = function (marker, prev, next) {
       var nextSegment;
       var prevSegment;
       if (prev) {
@@ -31,13 +108,13 @@ angular.module('cransit.map', [])
       }
       return marker;
     };
-    output.addStop = function (marker) {
-      if (output.selectedStop && $scope.direction) {
-        output.selectedStop = makeStop(marker, output.selectedStop.prev, output.selectedStop);
-      } else if (output.selectedStop) {
-        output.selectedStop = makeStop(marker, output.selectedStop, output.selectedStop.next);        
+    var addPoint = function (marker) {
+      if (selectedStop && direction) {
+        selectedStop = makePoint(marker, selectedStop.prev, selectedStop);
+      } else if (selectedStop) {
+        selectedStop = makePoint(marker, selectedStop, selectedStop.next);        
       } else {
-        output.selectedStop = makeStop(marker);
+        selectedStop = makePoint(marker);
       }     
     };
     var addSegment = function (prev, next) {
@@ -51,7 +128,7 @@ angular.module('cransit.map', [])
       segment.setMap($scope.map);
       return segment;
     };
-    output.deleteStop = function (stop) {
+    var deleteStop = function (stop) {
       if (stop.prev && stop.next) {
         stop.prev.next = stop.next;
         stop.next.prev = stop.prev;
@@ -69,7 +146,7 @@ angular.module('cransit.map', [])
       }
       stop.setMap(null);
     };   // Finish/confirm it works
-    output.updatePaths = function (stop) {
+    var updatePaths = function (stop) {
       if (stop.next) {
         var nextSegment = addSegment(stop, stop.next);
         stop.nextSegment.setMap(null);
@@ -83,51 +160,71 @@ angular.module('cransit.map', [])
         stop.prevSegment = prevSegment
       }
     }
+    output.setShape = function () {
+      this.routeData.shape = getPositions();
+      return this.routeData;
+    }
     var getPositions = function () {
       var result = [];
-      var stop = output.selectedStop;
+      var stop = selectedStop;
       while (stop.prev) {
         stop = stop.prev;
       }
       while (stop) {
         console.log(stop);
-        result.push({lat: stop.getPosition().lat(), lon: stop.getPosition().lng()});
+        result.push({
+          shape_pt_lat: stop.getPosition().lat(), 
+          shape_pt_lon: stop.getPosition().lng(),
+          point_type: stop.point_type });
         stop = stop.next;
       }
       return result;
-    };
-    output.setRouteData = function () {
-      // DO STUFF TO GET ROUTE DATA
-      result = {};
-      result['route_id'] = 1; // FIX LATER
-      result['route_short_name'] = $scope.name || output.name;
-      result['trip_headsign'] = $scope.description || output.description || '';
-      result['peak_frequency'] = $scope.daytime_frequency || output.peak_frequency || output.daytime_frequency;
-      result['daytime_frequency'] = $scope.daytime_frequency || output.daytime_frequency;
-      result['offhours_frequency'] = $scope.daytime_frequency || output.offhours_frequency || output.daytime_frequency;
-      result['service_start'] = $scope.service_start || output.service_start || '6';
-      result['service_end'] = $scope.service_end || output.service_end || '24';
-      for (var key in result) {
-        console.log(result[key]);
+    }; 
+    if (output.routeData.shape) {  
+      var shapeInit = output.routeData.shape;  
+      for (var i = 0; i < output.routeData.shape.length; i++) {
+        output.routeData.shape[i].point_type === 'stop' ? 
+        output.mapStop(output.routeData.shape[i].shape_pt_lat, output.routeData.shape[i].shape_pt_lon) :
+        output.mapPoint(output.routeData.shape[i].shape_pt_lat, output.routeData.shape[i].shape_pt_lon);
       }
-      result['stops'] = getPositions();
-
-      return result;
-    }
-    console.log(output.name);
+    }  
     return output;
   };
-  $scope.map;
-  $scope.route;
-  $scope.name;
+  
 
-  $scope.direction = false;
+  $scope.map;
+  $scope.route = Route();
+  $scope.routes = routes;
+  
+  $scope.displayRoute = function (route) {
+    console.log(route);
+    Routes.getShape({shape_id: route.shape_id})
+    .then(function (shape) {
+      route.shape = shape;
+      $scope.route.selected = false;
+      $scope.route = Route(route);
+    })
+    /*
+    .then(function (result) {
+      route.shape = result;
+      $scope.route = Route(route);
+    });
+    */
+  }
+  
   $scope.saveRoute = function () {
-    Routes.addOne($scope.route.setRouteData());
+    $scope.route.setShape();
+    Routes.addOne($scope.route.routeData);
   }
   $scope.createRoute = function () {
-    $scope.route = route('K line');
+    $scope.route.setShape();
+    $scope.route = Route();
+    routes.push($scope.routeData);
   }
+  $scope.reverse = function () {
+    $scope.route.reverse();
+  }
+
   var initialize = function () {
     var mapCanvas = document.getElementById('map');
     var mapOptions = {
@@ -136,38 +233,8 @@ angular.module('cransit.map', [])
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     $scope.map = new google.maps.Map(mapCanvas, mapOptions);
-    // Effectively everything below here is for building a new route (plus $scope.start and $scope.end above)
-    $scope.route = route('Y line');
     $scope.map.addListener('click', function (event) {
-    	var metroIcon = {
-    	  url: '../assets/metroIcon.png',
-    	  scaledSize: new google.maps.Size(30, 35)
-    	}
-      var marker = new google.maps.Marker({
-    	  position: event.latLng,
-    	  map: $scope.map,
-    	  title: "Station",
-    	  icon: metroIcon,
-        draggable: true
-      });
-      marker.addListener('dblclick', function (event) {
-        if ($scope.direction) {
-          $scope.route.selectedStop = $scope.route.selectedStop.next || $scope.route.selectedStop.prev;
-        } else {
-          $scope.route.selectedStop = $scope.route.selectedStop.prev || $scope.route.selectedStop.next;
-        }
-        $scope.route.deleteStop(marker); // same as marker
-      });
-      marker.addListener('click', function (event) {
-        $scope.route.selectedStop = marker;
-      });
-      marker.addListener('drag', function (event) {
-        $scope.route.updatePaths(marker)
-      })
-      marker.addListener('dragstart', function (event) {
-        $scope.route.selectedStop = marker;
-      });
-      $scope.route.addStop(marker);
+    	return $scope.route.mapStop(event.latLng);
     });
   };
 

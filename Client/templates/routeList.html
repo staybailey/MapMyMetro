@@ -5,13 +5,14 @@
   <div>
     <input type='text' placeholder="search by frequency" ng-model="searchFreq.daytime_frequency"></input>
   </div>
-  <div ng-repeat="route in data.routes | filter:searchTerm | filter:searchFreq | orderBy:'-name'">
+  <div ng-repeat="route in routes | filter:searchTerm | filter:searchFreq | orderBy:'name'">
     <div class="route">
       <div class="routeName">{{ route.name }}</div>
       <div class="dayFrequency">{{ route.daytime_frequency }} minute frequency</div>
       <div> </div>
       <div> </div>
       <div> </div>
+      <button ng-click="displayRoute(route)">Show Route</button>
       <!--<div class="serviceStart">{{ route.service_start }}</div>
       <div class="serviceEnd">{{ route.service_end }}</div>!-->
     </div>

@@ -12,7 +12,21 @@ module.exports = {
       models.routes['delete'](req.body, res);
     },
     put: function (req, res) {
-      models.routes.put(req, res);
+      models.routes.put(req.body, res);
     }
+  },
+  'shapes': {
+    get: function (req, res) {
+      models.shapes.get(req.params.shape_id, res);
+    },
+    post: function (req, res) {
+      models.shapes.post(req.body, res);
+    },
+    put: function (req, res) {
+      models.shapes.put(req.body, res);
+    },
+    delete: function (req, res) {
+      
+    },
   }
 }

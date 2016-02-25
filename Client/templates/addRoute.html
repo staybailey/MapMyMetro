@@ -1,13 +1,13 @@
 <div id='container'>
   <form name="addRouteForm" ng-submit="addRoute()">
     <h2>Create Route</h2>
-    <input name="routeNameInput" ng-model="name" class="routeNameField">Route Name</input>
-    <input name="routeDescriptionInput" ng-model="description" class="routeDescriptionField">Describe Route</input>
-    <input name="routeDayFrequencyInput" ng-model="daytime_frequency" class="routeDayFrequencyField">Daytime Frequency</input>
+    <input name="routeNameInput" ng-model="route.routeData.name" class="routeNameField">Route Name</input>
+    <input name="routeDescriptionInput" ng-model="route.routeData.description" class="routeDescriptionField">Describe Route</input>
+    <input name="routeDayFrequencyInput" ng-model="route.routeData.daytime_frequency" class="routeDayFrequencyField">Daytime Frequency</input>
     <!--<input name="routePeakFrequencyInput" ng-model="peak_frequency" class="routePeakFrequencyField"></input>
     <input name="routeOffhoursFrequencyInput" ng-model="offhours_frequency" class="routeOffhoursFrequencyField"></input>!-->
-    <input name="routeStartInput" ng-model="service_start" class="routeStartField">Service Start</input>
-    <input name="routeEndInput" ng-model="service_end" class="routeEndField">Service End</input>
+    <input name="routeStartInput" ng-model="route.routeData.service_start" class="routeStartField">Service Start</input>
+    <input name="routeEndInput" ng-model="route.routeData.service_end" class="routeEndField">Service End</input>
     <!--<button>Create Route</button>!-->
   </form>
 </div>

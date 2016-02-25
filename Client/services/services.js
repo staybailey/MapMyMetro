@@ -18,8 +18,20 @@ angular.module('cransit.services', [])
     });
   };
 
+  var getShape = function (shape_id) {
+    return $http({
+      method: 'PUT',
+      url: '/api/shapes',
+      data: shape_id
+    })
+    .then(function (resp) {
+      return resp.data;
+    })
+  };
+
   return {
     getAll: getAll,
-    addOne: addOne
+    addOne: addOne,
+    getShape: getShape
   };
 });

@@ -16,6 +16,12 @@ angular.module('cransit', [
     templateUrl: 'templates/addRoute.html'
   };
 })
+.directive('listroutes', function () { 
+  return {
+    restrict: 'E',
+    templateUrl: 'templates/routeList.html'
+  };
+})
 /*
 .directive('mymap', function () {
   return {
@@ -53,7 +59,12 @@ angular.module('cransit', [
   .state('map', {
     url: '/map',
     templateUrl: 'ui-routes/map.html',
-    controller: 'Map'
+    controller: 'Map',
+    resolve: {
+      routes: function (Routes) {
+        return Routes.getAll();
+      }
+    }
   });
 })
 // Add run stuff
