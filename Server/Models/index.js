@@ -89,7 +89,7 @@ var del = function (table, identifiers) {
   }
 }; 
 */
-var simpleroutesParams = ['route_id', 'route_short_name', 'trip_headsign', 
+var simpleroutesParams = ['name', 'description', 
             'peak_frequency', 'daytime_frequency', 'offhours_frequency', 'service_start', 'service_end', 'shape_id'];
 
 var shapesParams = ['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'shape_pt_sequence', 'shape_dist_traveled', 'point_type'];
