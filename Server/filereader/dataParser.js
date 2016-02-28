@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var db = require('../DB');
 var models = require('../Models');
+var xml2js = require('xml2js');
 
 var insert = models.insert;
 var insertOne = models.insertOne;
@@ -43,25 +44,28 @@ var filesToArray = function (key, next) {
     } else {
       // Done getting parsing csvs
       console.log('done csving');
-      var inputData = simpleroutes();
-      insertSimpleroutes(inputData);
-      insertShapes(inputData);
+      //var inputData = simpleroutes();
+      //insertSimpleroutes(inputData);
+      //insertShapes(inputData);
+      buildNodes(/*inputData*/);
     }
   }); 
 };
 
 
-var simpleroutesParams = ['name', 'description', 
-            'peak_frequency', 'daytime_frequency', 'offhours_frequency', 'service_start', 'service_end', 'shape_id', 'subway'];
+var simpleroutesParams = ['name', 'description', 'peak_frequency', 'daytime_frequency', 
+  'offhours_frequency', 'service_start', 'service_end', 'shape_id_0', 'shape_id_1', 'subway'];
 
-var shapesParams = ['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'shape_pt_sequence', 'shape_dist_traveled', 'point_type'];
+var shapesParams = ['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'shape_pt_sequence', 
+  'shape_dist_traveled', 'point_type'];
 
+var nodesParams = ['point_type', 'lat', 'lon'];
 
 var insertSimpleroutes = function (inputData) {
   var query = insert('simpleroutes', simpleroutesParams, inputData);
   console.log(query);
   db(query, function () {
-      // inserted into DB
+    console.log('simpleroutes entered DB succesfully');   
   })
 }
 
@@ -70,8 +74,11 @@ insertShapes = function (inputData) {
   var shape_ids = [];
   var stopsList = [];
   for (var key in inputData) {
-    shape_ids.push(inputData[key].shape_id);
-    stopsList.push(inputData[key].stopsSeq);
+    //console.log(inputData[key].shape_id_0, inputData[key].shape_id_1, inputData[key].stop_seq_0, inputData[key].stop_seq_1);
+    shape_ids.push(inputData[key].shape_id_0);
+    stopsList.push(inputData[key].stop_seq_0);
+    shape_ids.push(inputData[key].shape_id_1);
+    stopsList.push(inputData[key].stop_seq_1);
   }
   for (var i = 0; i < tables.shapes.length; i++) {
     var index = indexOf(tables.shapes[i][0], shape_ids);
@@ -88,7 +95,7 @@ insertShapes = function (inputData) {
   var query = insert('shapes', shapesParams, arr);
   //console.log(query);
   db(query, function () {
-    //inserted shapes into DB
+    console.log('shapes entered DB succesfully');
   })
 }
 
@@ -161,13 +168,13 @@ var getNames = function (routes) {
   return output;
 };
 
-// Returns an array of four item tuples of form [route_id, trip_id, stop_time, stop_id]
-var makeRouteTripDepartureStopArray = function (routes, trips, stop_times) {
+// Returns an array of four item tuples of form [route_id, trip_id, stop_time, stop_id, stop_seq, shape_id, trip_direction]
+var makeRouteTripDepartureStopArray = function (routes, trips, stop_times, direction) {
   var output = [];
   for (var i = 0; i < routes.length; i++) {
     for (var j = 0; j < trips.length; j++) {
       // trip is going in the 1 direction (arbitrary choice) and trip is a trip of route
-      if (routes[i][0] === trips[j][0] && (trips[j][5] === '1')) {
+      if (routes[i][0] === trips[j][0] && (trips[j][5] === direction)) {
         for (var k = 0; k < stop_times.length; k++) {
           // trips_id matches stop_times trip
           if (trips[j][2] === stop_times[k][0]) {
@@ -200,7 +207,13 @@ var findDayFrequency = function (RTDS) {
   for (var i = 0; i < RTDS.length; i++) {
     if (route !== RTDS[i][0]) {
       if (best !== null) {
-        output.push([route, cleanFrequency(best), twelveStop[5], stops, stopsSeq]);
+        output[route] = {
+          frequency: best,
+          shape_id: twelveStop[5],
+          stops: stops,
+          stopsSeq: stopsSeq
+        }
+        //output.push([route, cleanFrequency(best), twelveStop[5], stops, stopsSeq]);
       }
       route = RTDS[i][0];
       best = null;
@@ -236,33 +249,57 @@ var simpleroutes = function () {
   console.log('got weekday:' /*weekdayServiceIds*/);
   var trips = weekdayTrips(tables.trips, weekdayServiceIds);
   console.log('gotweekdayTrips:', trips.length /*trips*/);
-  var RTDS = makeRouteTripDepartureStopArray(tables.routes, trips, tables.stop_times);
-  console.log('gotRTDS:', RTDS.length, ' should ~=', trips.length * 20 /*RTDS*/);
-  var dayRoutes = findDayFrequency(RTDS);
-  console.log('gotDayRotues:', dayRoutes.length);
+  var RTDS1 = makeRouteTripDepartureStopArray(tables.routes, trips, tables.stop_times, '1');
+  console.log('gotRTDS1:', RTDS1.length, ' should ~=', trips.length * 20 /*RTDS1*/);
+  var RTDS0 = makeRouteTripDepartureStopArray(tables.routes, trips, tables.stop_times, '0');
+  console.log('gotRTDS0:', RTDS0.length, ' should ~=', trips.length * 20 /*RTDS0*/);
+  var dayRoutes1 = findDayFrequency(RTDS1);
+  var dayRoutes0 = findDayFrequency(RTDS0);
+  console.log('gotDayRotues:', dayRoutes1.length, dayRoutes0.length);
   var names = getNames(tables.routes);
-  var serviceSpans = getServiceSpan(RTDS);
+  var serviceSpans = getServiceSpan(RTDS1);
   console.log('gotServiceSpans');
   var output = {};
-  for (var i = 0; i < dayRoutes.length; i++) {
-    output[dayRoutes[i][0]] = {
-      daytime_frequency: dayRoutes[i][1],
-      peak_frequency: dayRoutes[i][1],
-      offhours_frequency: dayRoutes[i][1],
-      shape_id: dayRoutes[i][2],
-      subway: (100479 === dayRoutes[i][0] ? true : false), // Link is a hardcoded subway
-      stops: dayRoutes[i][3],
-      stopsSeq: dayRoutes[i][4]
+  for (var route in dayRoutes1) {
+    if (dayRoutes0[route]) {
+      var frequency = cleanFrequency((dayRoutes0[route].frequency + dayRoutes1[route].frequency) / 2);
+      output[route] = {
+        daytime_frequency: frequency,
+        peak_frequency: frequency,
+        offhours_frequency: frequency,
+        shape_id_1: dayRoutes1[route].shape_id,
+        shape_id_0: dayRoutes0[route].shape_id,
+        subway: (100479 === route), // Link is a hardcoded subway
+        stops_1: dayRoutes1[route].stops,
+        stops_0: dayRoutes0[route].stops,
+        stop_seq_1: dayRoutes1[route].stopsSeq,
+        stop_seq_0: dayRoutes0[route].stopsSeq,
+        name: names[route][0],
+        description: names[route][1],
+        service_start: serviceSpans[route][0],
+        service_end: serviceSpans[route][1]
+      }
     }
-  }
-  for (var key in output) {
-    output[key].name = names[key][0];
-    output[key].description = names[key][1];
-    output[key].service_start = serviceSpans[key][0];
-    output[key].service_end = serviceSpans[key][1];
+    //console.log(dayRoutes1.shape_id);
+    //console.log(dayRoutes0.shape_id);
   }
   return output;
 };
+
+var getXML = function () {
+  var parser = new xml2js.Parser()
+  var p = path.join(__dirname, '/testmap.xml');
+  fs.readFile(p, function (err, data) {
+    console.log(data);
+    parser.parseString(data, function (err, data) {
+
+    });
+  });
+}
+
+var buildNodes = function (inputData) {
+  getXML();
+}
 
 module.exports = {
   simpleroutes: simpleroutes,

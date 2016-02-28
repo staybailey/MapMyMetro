@@ -18,7 +18,8 @@ angular.module('cransit.map', [])
       service_start: null,
       service_end: null,
       shape: [],
-      shape_id: Math.floor(Math.random() * 50000000) + 50000000,
+      shape_id_0: Math.floor(Math.random() * 50000000) + 50000000,
+      shape_id_1: Math.floor(Math.random() * 50000000) + 50000000,
       subway: true // Only subway routes can be edited
     };
     // The currently selected point in the route used to determine how the next point should be connected
@@ -198,7 +199,7 @@ angular.module('cransit.map', [])
   
   $scope.displayRoute = function (route) {
     console.log(route);
-    Routes.getShape({shape_id: route.shape_id})
+    Routes.getShape({shape_id: route.shape_id_0})
     .then(function (shape) {
       route.shape = shape;
       $scope.route.selected = false;

@@ -9,7 +9,7 @@ var staticData = require('./filereader/dataParser.js');
 
 // INITIIALIZE DATABASE WITH TRANSIT DATA
 // Parse txt files
-// staticData.getStaticData();
+staticData.getStaticData();
 
 // console.log(parsedCSVs);
 
