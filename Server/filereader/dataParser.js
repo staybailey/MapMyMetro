@@ -290,9 +290,16 @@ var getXML = function () {
   var parser = new xml2js.Parser()
   var p = path.join(__dirname, '/testmap.xml');
   fs.readFile(p, function (err, data) {
-    console.log(data);
     parser.parseString(data, function (err, data) {
-
+      for (var key in data) {
+        if (Array.isArray(data[key])) {
+          for (var i = 0; i < data[key].length; i++) {
+            console.log(data[key]['$']);
+            console.log(data[key]['nd']);
+          }
+        }
+        
+      }
     });
   });
 }
