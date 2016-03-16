@@ -28,5 +28,20 @@ module.exports = {
     delete: function (req, res) {
       
     },
+  },
+  'roads': {
+    get: function (req, res) {
+      console.log('here');
+      models.roads.get(req, res);
+    },
+    post: function (req, res) {
+      models.roads.post(req.body, res);
+    },
+    put: function (req, res) {
+      models.roads.put(req.body, res);
+    },
+    delete: function (req, res) {
+      
+    }
   }
 }

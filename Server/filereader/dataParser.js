@@ -44,22 +44,30 @@ var filesToArray = function (key, next) {
     } else {
       // Done getting parsing csvs
       console.log('done csving');
-      //var inputData = simpleroutes();
-      //insertSimpleroutes(inputData);
-      //insertShapes(inputData);
-      buildNodes(/*inputData*/);
+      var stopTable = {};
+      for (var i = 0; i < tables.stops.length; i++) {
+        stopTable[tables.stops[i][0]] = {lat: tables.stops[i][4], lon: tables.stops[i][5]};
+      }
+      var inputData = simpleroutes();
+      insertSimpleroutes(inputData);
+      insertShapes(inputData, stopTable);
+      //buildNodes(/*inputData*/);
     }
   }); 
 };
 
 
-var simpleroutesParams = ['name', 'description', 'peak_frequency', 'daytime_frequency', 
+var simpleroutesParams = ['id', 'name', 'description', 'peak_frequency', 'daytime_frequency', 
   'offhours_frequency', 'service_start', 'service_end', 'shape_id_0', 'shape_id_1', 'subway'];
 
 var shapesParams = ['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'shape_pt_sequence', 
   'shape_dist_traveled', 'point_type'];
 
-var nodesParams = ['point_type', 'lat', 'lon'];
+var nodesParams = ['id', 'point_type', 'lat', 'lon'];
+
+var edgesParams = ['start_node', 'end_node', 'weight'];
+
+var nodes_routes_joinParams = ['node', 'route'];
 
 var insertSimpleroutes = function (inputData) {
   var query = insert('simpleroutes', simpleroutesParams, inputData);
@@ -69,12 +77,11 @@ var insertSimpleroutes = function (inputData) {
   })
 }
 
-insertShapes = function (inputData) {
+insertShapes = function (inputData, stopTable) {
   var arr = [];
   var shape_ids = [];
   var stopsList = [];
   for (var key in inputData) {
-    //console.log(inputData[key].shape_id_0, inputData[key].shape_id_1, inputData[key].stop_seq_0, inputData[key].stop_seq_1);
     shape_ids.push(inputData[key].shape_id_0);
     stopsList.push(inputData[key].stop_seq_0);
     shape_ids.push(inputData[key].shape_id_1);
@@ -91,11 +98,116 @@ insertShapes = function (inputData) {
       arr.push(tables.shapes[i]);
     }
   }
-  console.log(arr.length, arr[0]);
   var query = insert('shapes', shapesParams, arr);
-  //console.log(query);
   db(query, function () {
     console.log('shapes entered DB succesfully');
+    var stops = {};
+    for (var routeID in inputData) {
+      var route = inputData[routeID];
+      for (var i = 0; i < route.stops_0.length; i++) {
+        // edge needed to nearest map node
+        console.log(route.stop_times_0[i]);
+        var startStopTime = route.stop_times_0[i];
+        if (!stops[route.stops_0[i]]) {
+          // lat lon location, routes for route stop join table, and edges for edges.
+          stops[route.stops_0[i]] = {id: route.stops_0[i], 
+                                     lat: stopTable[route.stops_0[i]].lat, 
+                                     lon: stopTable[route.stops_0[i]].lon,
+                                     point_type: 'stop', 
+                                     routes: {}, 
+                                     edges: {}};
+        }
+        stops[route.stops_0[i]].routes[routeID] = true;      
+        for (var j = i + 1; j < route.stops_0.length; j++) {
+          var rph = 60 / route.daytime_frequency; // routesPerHour
+          var timeDif = route.stop_times_0[j] - startStopTime;
+          if (stops[route.stops_0[i]]['edges'][route.stops_0[j]]) {
+            var oldrph = stops[route.stops_0[i]]['edges'][route.stops_0[j]].rph;
+            var oldtime = stops[route.stops_0[i]]['edges'][route.stops_0[j]].time;
+            stops[route.stops_0[i]]['edges'][route.stops_0[j]].rph += rph;
+            stops[route.stops_0[i]]['edges'][route.stops_0[j]].time = 
+              (oldtime * oldrph + timeDif * rph) / (oldrph + rph);
+          } else {
+            stops[route.stops_0[i]]['edges'][route.stops_0[j]] = {rph: rph, time: timeDif};
+          }
+        }
+      }
+    }
+    for (var routeID in inputData) {
+      var route = inputData[routeID];
+      for (var i = 0; i < route.stops_1.length; i++) {
+        // edge needed to nearest map node
+        console.log(route.stop_times_1[i]);
+        var startStopTime = route.stop_times_1[i];
+        if (!stops[route.stops_1[i]]) {
+          // lat lon location, routes for route stop join table, and edges for edges.
+          stops[route.stops_1[i]] = {id: route.stops_1[i], 
+                                     lat: stopTable[route.stops_1[i]].lat, 
+                                     lon: stopTable[route.stops_1[i]].lon,
+                                     point_type: 'stop', 
+                                     routes: {}, 
+                                     edges: {}};
+        }
+        stops[route.stops_1[i]].routes[routeID] = true;      
+        for (var j = i + 1; j < route.stops_1.length; j++) {
+          var rph = 60 / route.daytime_frequency; // routesPerHour
+          var timeDif = route.stop_times_1[j] - startStopTime;
+          if (stops[route.stops_1[i]]['edges'][route.stops_1[j]]) {
+            var oldrph = stops[route.stops_1[i]]['edges'][route.stops_1[j]].rph;
+            var oldtime = stops[route.stops_1[i]]['edges'][route.stops_1[j]].time;
+            stops[route.stops_1[i]]['edges'][route.stops_1[j]].rph += rph;
+            stops[route.stops_1[i]]['edges'][route.stops_1[j]].time = 
+              (oldtime * oldrph + timeDif * rph) / (oldrph + rph);
+          } else {
+            stops[route.stops_1[i]]['edges'][route.stops_1[j]] = {rph: rph, time: timeDif};
+          }
+        }
+      }
+    }
+    query = insert('nodes', nodesParams, stops);
+    console.log(query);
+    db(query, function () {
+      console.log('stops entered db succesfully');   
+      var stop_route_join_array = [];
+      for (var stop in stops) {
+        for (var rt in stops[stop].routes) {
+          stop_route_join_array.push({route: rt, node: stop});
+        }
+      }
+      query = insert('nodes_routes_join', nodes_routes_joinParams, stop_route_join_array);
+      db(query, function () {
+        console.log('nodes_routes_join data entered db');
+        var edges = [];
+          for (var stop in stops) {
+            for (var edge in stops[stop].edges) {
+              edges.push({start_node: stop, end_node: edge, 
+                weight: (3600 / stops[stop].edges[edge].rph) + stops[stop].edges[edge].time});
+            }
+          }
+          query = insert('edges', edgesParams, edges);
+          db(query, function () {
+            console.log('inserted edges');
+          });
+      })
+    })
+
+    /*
+    var stopsArr = [null];
+    var stopsToDBArray = {};
+    var count = 1;
+    for (var stop in stops) {
+      stopsArr[count] = stops[stop];
+      stopsArr[count].dbEdges = {};
+      stopsToDBArray[stop] = count;
+      count++;
+    }
+
+    for (var i = 1; i < stopsArr.length; i++) {
+      for (var key in stopsArr[i].edges) {
+        stopsArr[i].edges
+      }
+    }
+    */
   })
 }
 
@@ -204,6 +316,7 @@ var findDayFrequency = function (RTDS) {
   var count;
   var stops = [];
   var stopsSeq = [];
+  var stopTimes = [];
   for (var i = 0; i < RTDS.length; i++) {
     if (route !== RTDS[i][0]) {
       if (best !== null) {
@@ -211,7 +324,8 @@ var findDayFrequency = function (RTDS) {
           frequency: best,
           shape_id: twelveStop[5],
           stops: stops,
-          stopsSeq: stopsSeq
+          stopsSeq: stopsSeq,
+          stopTimes: stopTimes
         }
         //output.push([route, cleanFrequency(best), twelveStop[5], stops, stopsSeq]);
       }
@@ -220,6 +334,7 @@ var findDayFrequency = function (RTDS) {
       twelveStop = false;
       stops = [];
       stopsSeq = [];
+      stopTimes = [];
     } else if (!twelveStop && RTDS[i][2] >= time('12:00:00') && RTDS[i][2] < time('13:40:00')) {
       twelveStop = RTDS[i];
       count = i;
@@ -229,6 +344,7 @@ var findDayFrequency = function (RTDS) {
       count++;
       while (RTDS[count][1] === twelveStop[1]) {
         stops.push(RTDS[count][3]);
+        stopTimes.push(RTDS[count][2]);
         stopsSeq.push(RTDS[count][4]);
         count++;
       }
@@ -244,6 +360,7 @@ var findDayFrequency = function (RTDS) {
   return output;
 };
 
+// returns an array of simpleroute data.
 var simpleroutes = function () {
   var weekdayServiceIds = weekday(tables.calendar);
   console.log('got weekday:' /*weekdayServiceIds*/);
@@ -259,11 +376,12 @@ var simpleroutes = function () {
   var names = getNames(tables.routes);
   var serviceSpans = getServiceSpan(RTDS1);
   console.log('gotServiceSpans');
-  var output = {};
+  var output = {}; // Insert will ignore this value meaning first value in DB === output[1]
   for (var route in dayRoutes1) {
     if (dayRoutes0[route]) {
       var frequency = cleanFrequency((dayRoutes0[route].frequency + dayRoutes1[route].frequency) / 2);
       output[route] = {
+        id: route,
         daytime_frequency: frequency,
         peak_frequency: frequency,
         offhours_frequency: frequency,
@@ -274,11 +392,13 @@ var simpleroutes = function () {
         stops_0: dayRoutes0[route].stops,
         stop_seq_1: dayRoutes1[route].stopsSeq,
         stop_seq_0: dayRoutes0[route].stopsSeq,
+        stop_times_1: dayRoutes1[route].stopTimes,
+        stop_times_0: dayRoutes0[route].stopTimes,
         name: names[route][0],
         description: names[route][1],
         service_start: serviceSpans[route][0],
         service_end: serviceSpans[route][1]
-      }
+      };
     }
     //console.log(dayRoutes1.shape_id);
     //console.log(dayRoutes0.shape_id);
@@ -291,14 +411,89 @@ var getXML = function () {
   var p = path.join(__dirname, '/testmap.xml');
   fs.readFile(p, function (err, data) {
     parser.parseString(data, function (err, data) {
-      for (var key in data) {
-        if (Array.isArray(data[key])) {
-          for (var i = 0; i < data[key].length; i++) {
-            console.log(data[key]['$']);
-            console.log(data[key]['nd']);
+      var output = [];
+      var points = {};
+      for (var key in data) {     
+        var ways = data[key]['way'];
+        var way;
+        for (way in ways) {
+          if (Array.isArray(ways[way]['tag'])) {
+            for (var i = 0; i < ways[way]['tag'].length; i++) {
+              if (ways[way]['tag'][i]['$']['k'] === 'highway') {
+                var v = ways[way]['tag'][i]['$']['v'];
+                if (v === 'trunk' || v === 'primary' || v === 'secondary' || v === 'tertiary' || v === 'unclassified' || v === 'residential') {
+                  if (Array.isArray(ways[way]['nd'])) {
+                    for (var j = 0; j < ways[way]['nd'].length; j++) {
+                      var point = ways[way]['nd'][j]['$']['ref'];
+                      if (points[point]) {
+                        points[point]++;
+                      } else {
+                        points[point] = 1;
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
-        
+        for (way in ways) {
+          if (Array.isArray(ways[way]['tag'])) {
+            for (var i = 0; i < ways[way]['tag'].length; i++) {
+              if (ways[way]['tag'][i]['$']['k'] === 'highway') {
+                var v = ways[way]['tag'][i]['$']['v'];
+                if (v === 'trunk' || v === 'primary' || v === 'secondary' || v === 'tertiary' || v === 'unclassified' || v === 'residential') {
+                  if (Array.isArray(ways[way]['nd'])) {
+                    var prev = null;
+                    for (var j = 0; j < ways[way]['nd'].length; j++) {
+                      var point = ways[way]['nd'][j]['$']['ref'];
+                      if (typeof points[point] === 'number' && points[point] > 1) {
+                        points[point] = {edges: {}, point_type: 'intersection'};
+                      }
+                      if (typeof points[point] === 'object') {
+                        if (prev) {
+                          points[point]['edges'][prev] = true;
+                        }
+                        prev = point;
+                      } else {
+                        delete points[point];
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }      
+        }
+        for (var i = 0; i < data[key]['node'].length; i++) {
+          if (points[data[key]['node'][i]['$']['id']]) {
+            points[data[key]['node'][i]['$']['id']].lat = data[key]['node'][i]['$']['lat'];
+            points[data[key]['node'][i]['$']['id']].lon = data[key]['node'][i]['$']['lon'];
+          }
+        }
+        var pointsArr = [];
+        var pointsArrMap = {};
+        var count = 0;
+        for (var point in points) {
+          pointsArr[count] = points[point];
+          pointsArrMap[point] = count;
+          count++;
+        }
+        var query = insert('nodes', nodesParams, pointsArr);
+        db(query, function () {
+          console.log('inserted nodes');
+          var edges = [];
+          for (var i = 0; i < pointsArr.length; i++) {
+            for (var edge in pointsArr[i].edges) {
+              edges.push({start_node: i + 1, end_node: pointsArrMap[edge] + 1, weight: 5});
+              edges.push({start_node: pointsArrMap[edge] + 1, end_node: i + 1, weight: 5});
+            }
+          }
+          query = insert('edges', edgesParams, edges);
+          db(query, function () {
+            console.log('inserted edges');
+          });
+        });
       }
     });
   });

@@ -181,9 +181,23 @@ module.exports = {
     },
 
     delete: function (data) {
-
+      
     },
   },
+
+  roads: {
+    get: function (req, res) {
+      console.log('here 2')
+      var query = 'select * from nodes where point_type = "intersection"';
+      db(query, function (nodes) {
+        query = 'select * from edges';
+        db(query, function (edges) {
+          console.log(edges);
+          res.json({nodes: nodes, edges: edges});
+        })
+      });
+    }
+  }
 
   // SHOULD HANDLE BUSWAYS??????
   /*

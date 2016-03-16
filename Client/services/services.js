@@ -34,4 +34,18 @@ angular.module('cransit.services', [])
     addOne: addOne,
     getShape: getShape
   };
-});
+})
+.factory('Roads', function ($http) {
+  var getRoads = function () {
+    return $http({
+      method: 'GET',
+      url: '/api/roads',
+    })
+    .then(function (resp) {
+      return resp.data;
+    })
+  }
+  return {
+    getRoads: getRoads
+  }
+})

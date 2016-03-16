@@ -1,5 +1,5 @@
 angular.module('cransit.map', [])
-.controller('Map', function ($scope, Routes, routes) {
+.controller('Map', function ($scope, Routes, routes, Roads) {
 
   /* route class 
   A route class instatiation is defined by routeObj properties
@@ -196,6 +196,37 @@ angular.module('cransit.map', [])
   $scope.map;
   $scope.route = Route();
   $scope.routes = routes;
+
+  $scope.showRoads = function () {
+    Roads.getRoads()
+    .then(function (data) {
+      console.log(data);
+      /*
+      for (var i = 0; i < data.nodes.length; i++) {
+        var position = new google.maps.LatLng(data.nodes[i].lat, data.nodes[i].lon)
+        var marker = new google.maps.Marker({
+          position: position,
+          map: $scope.map,
+          title: "intersection",
+          draggable: false
+        })
+      }*/
+      for (var i = 0; i < data.edges.length; i++) {
+        var start = data.nodes[data.edges[i].start_node - 1];
+        var end = data.nodes[data.edges[i].end_node - 1];
+        var ps = new google.maps.LatLng(start.lat, start.lon);
+        var pa = new google.maps.LatLng(end.lat, end.lon);
+        var segment = new google.maps.Polyline({
+          path: [ps, pa],
+          geodesic: true,
+          strokeColor: '#FF0000',
+          strokeOpacity: 1.0,
+          strokeWeight: 2
+        });
+        segment.setMap($scope.map);
+      }
+    })
+  }
   
   $scope.displayRoute = function (route) {
     console.log(route);
@@ -205,12 +236,6 @@ angular.module('cransit.map', [])
       $scope.route.selected = false;
       $scope.route = Route(route);
     })
-    /*
-    .then(function (result) {
-      route.shape = result;
-      $scope.route = Route(route);
-    });
-    */
   }
   
   $scope.saveRoute = function () {

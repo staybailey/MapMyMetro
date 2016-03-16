@@ -10,13 +10,17 @@ CREATE TABLE shapes (
 
 /* May prove gratuitous and service spans maybe should be times*/
 CREATE TABLE simpleroutes (
-  id INT(11) NOT NULL AUTO_INCREMENT, name VARCHAR(255), description VARCHAR(255), peak_frequency INT(11), daytime_frequency INT(11), offhours_frequency INT(11), service_start INT(11), service_end INT(11), shape_id_0 INT(11), shape_id_1 INT(11), subway BOOLEAN, PRIMARY KEY (id)
+  id INT(11) NOT NULL, name VARCHAR(255), description VARCHAR(255), peak_frequency INT(11), daytime_frequency INT(11), offhours_frequency INT(11), service_start INT(11), service_end INT(11), shape_id_0 INT(11), shape_id_1 INT(11), subway BOOLEAN, PRIMARY KEY (id)
 );
 
 CREATE TABLE nodes (
-  id INT(11) NOT NULL AUTO_INCREMENT, point_type VARCHAR(255), lat FLOAT, lon FLOAT, PRIMARY KEY (id)
+  id INT(11) NOT NULL, point_type VARCHAR(255), lat FLOAT, lon FLOAT, PRIMARY KEY (id)
 );
 
 CREATE TABLE edges (
-  id INT(11) NOT NULL AUTO_INCREMENT, start_node INT(11), end_node INT(11), weight INT(11), PRIMARY KEY (id), FOREIGN KEY (start_node) REFERENCES nodes(id), FOREIGN KEY (start_node) REFERENCES nodes(id)
+  id INT(11) NOT NULL AUTO_INCREMENT, start_node INT(11), end_node INT(11), weight INT(11), PRIMARY KEY (id), FOREIGN KEY (start_node) REFERENCES nodes(id), FOREIGN KEY (end_node) REFERENCES nodes(id)
+);
+
+CREATE TABLE nodes_routes_join (
+  id INT(11) NOT NULL AUTO_INCREMENT, route INT(11), node INT(11), PRIMARY KEY (id), FOREIGN KEY (route) REFERENCES simpleroutes(id), FOREIGN KEY (node) REFERENCES nodes(id)
 );
