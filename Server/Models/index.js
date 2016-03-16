@@ -89,10 +89,12 @@ var del = function (table, identifiers) {
   }
 }; 
 */
-var simpleroutesParams = ['name', 'description', 'peak_frequency', 'daytime_frequency', 
+var simpleroutesParams = ['id', 'name', 'description', 'peak_frequency', 'daytime_frequency', 
 'offhours_frequency', 'service_start', 'service_end', 'shape_id_0', 'shape_id_1', 'subway'];
 
 var shapesParams = ['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'shape_pt_sequence', 'shape_dist_traveled', 'point_type'];
+
+
 
 var cleanShape = function (shape, shape_id) {
   var stops = []
@@ -128,6 +130,7 @@ module.exports = {
     // posts a new route to DB with basic data in simple routes and the shape into shapes table
     // Client side shape only has lat, lon and type so other values added by cleanShape
     post: function (data, res) {
+      data['id'] = Math.floor(Math.random() * 1000000000);
       var query = insertOne('simpleroutes', simpleroutesParams, data);
       db(query, function () {
         query = insert('shapes', shapesParams, cleanShape(data.shape, data.shape_id_0));
